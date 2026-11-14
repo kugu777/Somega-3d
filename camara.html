@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Modo cámara · SOMEGA</title>
+<style>
+  html,body { margin:0; height:100%; overflow:hidden; background:#000; color:#fff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color:transparent; }
+  video, canvas { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; }
+  canvas { touch-action:none; }
+  .bar { position:fixed; left:0; right:0; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:10px; z-index:5; }
+  .top { top:0; padding-top:max(10px, env(safe-area-inset-top)); }
+  .bottom { bottom:0; padding-bottom:max(16px, env(safe-area-inset-bottom)); }
+  button { border:0; border-radius:999px; padding:12px 15px; font-size:15px; font-weight:600; background:rgba(10,20,40,.8); color:#fff; font-family:inherit; }
+  button.arm { background:#1f4fd1; }
+  button.exit { background:rgba(180,30,30,.85); }
+  #sel { display:none; } #sel.on { display:flex; }
+  #hint { position:fixed; left:50%; top:58%; transform:translateX(-50%); background:rgba(0,0,0,.55); padding:8px 14px; border-radius:999px; font-size:14px; white-space:nowrap; z-index:5; pointer-events:none; }
+  .height { position:fixed; right:10px; top:22%; z-index:5; background:rgba(10,20,40,.75); border-radius:14px; padding:10px 8px; text-align:center; font-size:12px; }
+  .height b { display:block; font-size:16px; margin:4px 0; }
+  .height button { display:block; width:44px; padding:8px 0; margin:4px auto; font-size:18px; }
+  #start { position:fixed; inset:0; z-index:10; background:#0b1730; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; gap:14px; }
+  #start img { height:26px; }
+  #start h1 { font-size:21px; margin:6px 0 0; }
+  #start p { color:#9fb0cc; font-size:15px; line-height:1.5; margin:0; max-width:420px; }
+  #start .go { background:#1f4fd1; font-size:17px; padding:15px 26px; box-shadow:0 6px 24px rgba(31,79,209,.45); }
+  #start a { color:#7fa6ff; font-size:14px; text-decoration:none; }
+  #err { color:#ffb4a8 !important; }
+</style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/jsm/" } }</script>
+</head>
+<body>
+<video id="video" playsinline muted autoplay></video>
+
+<div id="start">
+  <img src="logo.png" alt="SOMEGA">
+  <h1>Modo cámara</h1>
+  <p>Funciona en cualquier móvil. Ponte de pie en el barco, con el móvil a la altura del pecho, y <strong>no camines</strong>: solo gira el móvil para mirar alrededor.</p>
+  <p>Las medidas son <strong>aproximadas</strong>. Para una colocación exacta usa la realidad aumentada si tu móvil la tiene.</p>
+  <button class="go" id="go">Abrir cámara</button>
+  <p id="err"></p>
+  <a href="./">‹ Volver al menú</a>
+</div>
+
+<div class="bar top" id="top"></div>
+<div id="hint">Apunta a la cubierta y toca para poner la máquina</div>
+<div class="height">Altura<br>móvil<b id="hv">1,40 m</b><button id="hup">＋</button><button id="hdn">－</button></div>
+<div class="bar bottom" id="sel">
+  <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button>
+  <button id="move">Mover aquí</button><button id="del">Quitar</button>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const MACHINES = [
+  { id:'mesa', name:'Mesa vibradora', glb:'mesa-vibradora.glb' },
+  { id:'enc',  name:'Encordadora', glb:'encordadora/encordadora.glb' },
+];
+let armed = MACHINES.find(m => '#' + m.id === location.hash) || MACHINES[0];
+let phoneH = 1.40;
+
+// ----- 3D -----
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x556070, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(2, 5, 3); scene.add(sun);
+scene.environment = (() => {
+  const env = new THREE.Scene(), geo = new THREE.SphereGeometry(10, 48, 24), pos = geo.attributes.position, col = [];
+  const top = new THREE.Color(0xf2f4f8), mid = new THREE.Color(0xa9b1bd), low = new THREE.Color(0x6a727d), bot = new THREE.Color(0x454b53);
+  for (let i = 0; i < pos.count; i++) { const t = pos.getY(i)/10, c = new THREE.Color();
+    if (t > 0.05) c.lerpColors(mid, top, Math.min(1, t*1.4)); else if (t > -0.05) c.lerpColors(low, mid, (t+0.05)/0.1); else c.lerpColors(low, bot, Math.min(1, -t*1.5));
+    col.push(c.r, c.g, c.b); }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  env.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.BackSide })));
+  return new THREE.PMREMGenerator(renderer).fromScene(env, 0.02).texture;
+})();
+const camera = new THREE.PerspectiveCamera(60, 1, 0.05, 60);
+camera.position.set(0, phoneH, 0);
+
+function resize() {
+  const w = innerWidth, h = innerHeight; renderer.setSize(w, h);
+  // campo de visión típico de la cámara trasera (≈ 66° en horizontal del lado corto)
+  const shortFov = 66 * Math.PI / 180;
+  camera.fov = h > w ? 2 * Math.atan(Math.tan(shortFov/2) * h / w) * 180/Math.PI : 66 * 0.75;
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const SHADOW = (() => { const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), r = g.createRadialGradient(64,64,10,64,64,64);
+  r.addColorStop(0,'rgba(0,0,0,.5)'); r.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c); })();
+const loader = new GLTFLoader(), cache = {};
+const load = m => cache[m.id] ||= new Promise((ok, ko) => loader.load(m.glb, g => ok(g.scene), undefined, ko));
+async function instance(m) {
+  const o = (await load(m)).clone(true);
+  const s = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3());
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(s.x*1.25, s.z*1.25), new THREE.MeshBasicMaterial({ map:SHADOW, transparent:true, depthWrite:false }));
+  p.rotation.x = -Math.PI/2; p.position.y = 0.003; o.add(p); return o;
+}
+MACHINES.forEach(load);
+
+const placed = new THREE.Group(); scene.add(placed);
+const reticle = new THREE.Mesh(new THREE.RingGeometry(0.14, 0.19, 40).rotateX(-Math.PI/2),
+  new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.9 })); scene.add(reticle);
+const outline = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color:0x3d7bff }));
+outline.visible = false; scene.add(outline);
+
+// ----- orientación del móvil -----
+const zee = new THREE.Vector3(0,0,1), eul = new THREE.Euler(), q0 = new THREE.Quaternion(),
+      q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+let ori = null, yaw0 = null;
+addEventListener('deviceorientation', e => { if (e.alpha !== null) ori = e; }, true);
+function applyOrientation() {
+  if (!ori) return;
+  const d = THREE.MathUtils.DEG2RAD, a = ori.alpha*d, b = ori.beta*d, g = ori.gamma*d;
+  const so = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * d;
+  eul.set(b, a, -g, 'YXZ'); camera.quaternion.setFromEuler(eul); camera.quaternion.multiply(q1);
+  camera.quaternion.multiply(q0.setFromAxisAngle(zee, -so));
+  if (yaw0 === null) { const f = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); yaw0 = Math.atan2(f.x, -f.z); }
+  camera.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), yaw0));
+}
+
+// punto del suelo al que apunta el centro de la pantalla
+const ray = new THREE.Raycaster(), floor = new THREE.Plane(new THREE.Vector3(0,1,0), 0), aim = new THREE.Vector3();
+function floorAt(nx, ny, out) {
+  ray.setFromCamera({ x:nx, y:ny }, camera);
+  const p = ray.ray.intersectPlane(floor, out);
+  return p && p.distanceTo(camera.position) < 15 ? p : null;
+}
+
+// ----- interfaz -----
+const topBar = document.getElementById('top'), hint = document.getElementById('hint'), selBar = document.getElementById('sel');
+let selected = null;
+function paintTop() {
+  topBar.innerHTML = '';
+  MACHINES.forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.name;
+    if (m === armed) b.className = 'arm';
+    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.name; };
+    topBar.appendChild(b); });
+  const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
+  x.onclick = () => location.href = './'; topBar.appendChild(x);
+}
+function select(o) {
+  selected = o; selBar.classList.toggle('on', !!o); outline.visible = !!o; if (!o) return;
+  o.updateMatrixWorld(true);
+  const lb = new THREE.Box3().setFromObject(o).applyMatrix4(new THREE.Matrix4().copy(o.matrixWorld).invert());
+  const y = 0.01, pts = [[lb.min.x,y,lb.min.z],[lb.max.x,y,lb.min.z],[lb.max.x,y,lb.max.z],[lb.min.x,y,lb.max.z]]
+    .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
+  outline.geometry.setFromPoints(pts);
+}
+renderer.domElement.addEventListener('click', async e => {
+  const nx = e.clientX / innerWidth * 2 - 1, ny = -(e.clientY / innerHeight) * 2 + 1;
+  ray.setFromCamera({ x:nx, y:ny }, camera);
+  const hits = ray.intersectObjects(placed.children, true);
+  if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
+  const p = floorAt(0, 0, new THREE.Vector3()); if (!p) { hint.textContent = 'Apunta más hacia la cubierta'; return; }
+  const o = await instance(armed); o.position.copy(p);
+  o.rotation.y = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
+  placed.add(o); select(o); hint.textContent = 'Toca una máquina para girarla o moverla';
+});
+document.getElementById('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
+document.getElementById('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
+document.getElementById('move').onclick = () => { const p = selected && floorAt(0, 0, new THREE.Vector3()); if (p) { selected.position.copy(p); select(selected); } };
+document.getElementById('del').onclick = () => { if (selected) { placed.remove(selected); select(null); } };
+function setH(v) {
+  phoneH = Math.min(2.0, Math.max(0.8, v)); camera.position.y = phoneH;
+  document.getElementById('hv').textContent = phoneH.toFixed(2).replace('.', ',') + ' m';
+}
+document.getElementById('hup').onclick = () => setH(phoneH + 0.05);
+document.getElementById('hdn').onclick = () => setH(phoneH - 0.05);
+
+// ----- arranque -----
+document.getElementById('go').onclick = async () => {
+  const err = document.getElementById('err');
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
+      try { await DeviceOrientationEvent.requestPermission(); } catch (e) { /* seguimos: en Android no hace falta */ }
+    }
+    const st = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false });
+    const v = document.getElementById('video'); v.srcObject = st; await v.play();
+  } catch (e) {
+    err.textContent = 'No se pudo abrir la cámara: ' + e.message + '. Revisa el permiso de cámara del navegador.'; return;
+  }
+  document.getElementById('start').style.display = 'none'; paintTop();
+  setTimeout(() => { if (!ori) hint.textContent = 'Este móvil no da el giroscopio: la máquina no seguirá el movimiento'; }, 2500);
+};
+
+const tmp = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  applyOrientation();
+  const p = floorAt(0, 0, tmp); reticle.visible = !!p; if (p) reticle.position.copy(p);
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
