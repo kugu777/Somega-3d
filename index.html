@@ -36,6 +36,10 @@
   .hint { position:absolute; top:12px; left:50%; transform:translateX(-50%);
     font-size:12px; color:var(--muted); background:rgba(0,0,0,.25); padding:4px 10px; border-radius:999px; white-space:nowrap; }
   footer { padding:12px 18px 20px; font-size:12px; color:var(--muted); border-top:1px solid rgba(255,255,255,.08); }
+  .alt { padding:10px 18px 0; text-align:center; }
+  .alt-btn { display:inline-block; color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:999px;
+    padding:10px 16px; font-size:14px; text-decoration:none; }
+  .stat { color:#ffb4a8; font-size:13px; margin:8px 0 0; min-height:1em; }
 </style>
 </head>
 <body>
@@ -57,7 +61,7 @@
 </div>
 
 <model-viewer id="mv" src="mesa-vibradora.glb" ios-src="mesa-vibradora.usdz" alt="Mesa vibradora SOMEGA"
-  ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+  ar ar-modes="scene-viewer webxr quick-look" ar-scale="fixed" ar-placement="floor"
   camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="2500"
   camera-orbit="35deg 70deg auto" shadow-intensity="1" shadow-softness="0.8"
   exposure="1.05" environment-image="neutral" interaction-prompt="none">
@@ -68,6 +72,10 @@
   </button>
 </model-viewer>
 
+<div class="alt">
+  <a id="alt" class="alt-btn" href="intent://arvr.google.com/scene-viewer/1.0?file=https://kugu777.github.io/Somega-3d/mesa-vibradora.glb&amp;mode=ar_preferred&amp;resizable=false&amp;title=Mesa%20vibradora%20SOMEGA#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.google.ar.core;end;">¿No se abre? Abrir con Google (Android)</a>
+  <p id="arstat" class="stat"></p>
+</div>
 <div class="help">
   <strong>Cómo colocarla en el barco</strong>
   <ol>
@@ -79,5 +87,15 @@
 </div>
 
 <footer>© SOMEGA · Modelo orientativo de dimensiones exteriores. No válido para fabricación.</footer>
+<script>
+(function(){
+  var mv=document.getElementById('mv'), st=document.getElementById('arstat');
+  var ua=navigator.userAgent;
+  if(!/Android/i.test(ua)) document.getElementById('alt').style.display='none';
+  mv.addEventListener('ar-status', function(e){
+    if(e.detail.status==='failed') st.textContent='No se pudo abrir la cámara AR. Prueba el botón "Abrir con Google" e instala "Servicios de Google Play para RA" si lo pide.';
+  });
+})();
+</script>
 </body>
 </html>
