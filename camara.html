@@ -16,6 +16,7 @@
   button.arm { background:#1f4fd1; }
   button.exit { background:rgba(180,30,30,.85); }
   #sel { display:none; } #sel.on { display:flex; }
+  #sens { position:fixed; left:10px; bottom:max(76px, calc(env(safe-area-inset-bottom) + 70px)); font-size:11px; color:rgba(255,255,255,.75); z-index:5; text-shadow:0 1px 2px #000; }
   #hint { position:fixed; left:50%; top:58%; transform:translateX(-50%); background:rgba(0,0,0,.55); padding:8px 14px; border-radius:999px; font-size:14px; white-space:nowrap; z-index:5; pointer-events:none; }
   .height { position:fixed; right:10px; top:22%; z-index:5; background:rgba(10,20,40,.75); border-radius:14px; padding:10px 8px; text-align:center; font-size:12px; }
   .height b { display:block; font-size:16px; margin:4px 0; }
@@ -36,7 +37,7 @@
 <div id="start">
   <img src="logo.png" alt="SOMEGA">
   <h1>Modo cámara</h1>
-  <p>Funciona en cualquier móvil. Ponte de pie en el barco, con el móvil a la altura del pecho, y <strong>no camines</strong>: solo gira el móvil para mirar alrededor.</p>
+  <p>Funciona en cualquier móvil. Ponte de pie en el barco con el móvil a la altura del pecho. Toca para poner la máquina y <strong>arrastra el dedo sobre ella para girarla</strong> y verla por todos los lados.</p>
   <p>Las medidas son <strong>aproximadas</strong>. Para una colocación exacta usa la realidad aumentada si tu móvil la tiene.</p>
   <button class="go" id="go">Abrir cámara</button>
   <p id="err"></p>
@@ -46,6 +47,7 @@
 <div class="bar top" id="top"></div>
 <div id="hint">Apunta a la cubierta y toca para poner la máquina</div>
 <div class="height">Altura<br>móvil<b id="hv">1,40 m</b><button id="hup">＋</button><button id="hdn">－</button></div>
+<div id="sens"></div>
 <div class="bar bottom" id="sel">
   <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button>
   <button id="move">Mover aquí</button><button id="del">Quitar</button>
@@ -119,16 +121,32 @@ outline.visible = false; scene.add(outline);
 // ----- orientación del móvil -----
 const zee = new THREE.Vector3(0,0,1), eul = new THREE.Euler(), q0 = new THREE.Quaternion(),
       q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-let ori = null, yaw0 = null;
-addEventListener('deviceorientation', e => { if (e.alpha !== null) ori = e; }, true);
+let ori = null, yaw0 = null, sens = 'ninguno';
+let manualYaw = 0, manualPitch = -32 * Math.PI / 180;   // sin sensores: mirando 32° hacia abajo
+function onOri(e) {
+  if (e.beta === null || e.beta === undefined) return;
+  if (e.alpha !== null && e.alpha !== undefined) { ori = { alpha:e.alpha, beta:e.beta, gamma:e.gamma || 0 }; sens = 'giroscopio'; }
+  else if (sens !== 'giroscopio') { ori = { alpha:0, beta:e.beta, gamma:e.gamma || 0 }; sens = 'inclinación'; }
+}
+addEventListener('deviceorientation', onOri, true);
+addEventListener('deviceorientationabsolute', onOri, true);
+let gB = null;
+addEventListener('devicemotion', e => {          // último recurso: la gravedad del acelerómetro da la inclinación
+  if (sens === 'giroscopio' || sens === 'inclinación') return;
+  const a = e.accelerationIncludingGravity; if (!a || a.y === null) return;
+  const b = Math.atan2(a.y, a.z) * 180 / Math.PI;
+  gB = gB === null ? b : gB * 0.85 + b * 0.15;
+  ori = { alpha:0, beta:gB, gamma:0 }; sens = 'acelerómetro';
+}, true);
+const Y = new THREE.Vector3(0,1,0);
 function applyOrientation() {
-  if (!ori) return;
+  if (!ori) { camera.rotation.set(manualPitch, manualYaw, 0, 'YXZ'); return; }
   const d = THREE.MathUtils.DEG2RAD, a = ori.alpha*d, b = ori.beta*d, g = ori.gamma*d;
   const so = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * d;
   eul.set(b, a, -g, 'YXZ'); camera.quaternion.setFromEuler(eul); camera.quaternion.multiply(q1);
   camera.quaternion.multiply(q0.setFromAxisAngle(zee, -so));
   if (yaw0 === null) { const f = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); yaw0 = Math.atan2(f.x, -f.z); }
-  camera.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), yaw0));
+  camera.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(Y, yaw0 + manualYaw));
 }
 
 // punto del suelo al que apunta el centro de la pantalla
@@ -159,7 +177,32 @@ function select(o) {
     .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
   outline.geometry.setFromPoints(pts);
 }
-renderer.domElement.addEventListener('click', async e => {
+// arrastrar: sobre la máquina seleccionada la gira; en otro sitio mira alrededor
+let drag = null;
+const cv = renderer.domElement;
+cv.addEventListener('pointerdown', e => {
+  let mode = 'look';
+  if (selected) {
+    ray.setFromCamera({ x:e.clientX/innerWidth*2-1, y:-(e.clientY/innerHeight)*2+1 }, camera);
+    if (ray.intersectObject(selected, true).length) mode = 'spin';
+  }
+  drag = { x:e.clientX, y:e.clientY, lx:e.clientX, ly:e.clientY, mode, moved:false };
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly; drag.lx = e.clientX; drag.ly = e.clientY;
+  if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) drag.moved = true;
+  if (!drag.moved) return;
+  if (drag.mode === 'spin') { selected.rotation.y += dx * 0.012; select(selected); }
+  else {
+    manualYaw += dx * 0.004;
+    if (sens === 'ninguno') manualPitch = Math.max(-1.45, Math.min(0.3, manualPitch + dy * 0.004));
+  }
+});
+cv.addEventListener('pointerup', () => { setTimeout(() => drag = null, 0); });
+cv.addEventListener('click', async e => {
+  if (drag && drag.moved) return;
   const nx = e.clientX / innerWidth * 2 - 1, ny = -(e.clientY / innerHeight) * 2 + 1;
   ray.setFromCamera({ x:nx, y:ny }, camera);
   const hits = ray.intersectObjects(placed.children, true);
@@ -167,7 +210,7 @@ renderer.domElement.addEventListener('click', async e => {
   const p = floorAt(0, 0, new THREE.Vector3()); if (!p) { hint.textContent = 'Apunta más hacia la cubierta'; return; }
   const o = await instance(armed); o.position.copy(p);
   o.rotation.y = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
-  placed.add(o); select(o); hint.textContent = 'Toca una máquina para girarla o moverla';
+  placed.add(o); select(o); hint.textContent = 'Arrastra el dedo sobre la máquina para girarla';
 });
 document.getElementById('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
 document.getElementById('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
@@ -193,7 +236,11 @@ document.getElementById('go').onclick = async () => {
     err.textContent = 'No se pudo abrir la cámara: ' + e.message + '. Revisa el permiso de cámara del navegador.'; return;
   }
   document.getElementById('start').style.display = 'none'; paintTop();
-  setTimeout(() => { if (!ori) hint.textContent = 'Este móvil no da el giroscopio: la máquina no seguirá el movimiento'; }, 2500);
+  setTimeout(() => {
+    const st = document.getElementById('sens'); st.textContent = 'Sensor: ' + sens;
+    if (sens === 'ninguno') hint.textContent = 'Arrastra el dedo para mirar y toca para poner la máquina';
+    else if (sens !== 'giroscopio') hint.textContent = 'Toca para poner la máquina. Para girar la vista, arrastra el dedo';
+  }, 2500);
 };
 
 const tmp = new THREE.Vector3();
