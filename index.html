@@ -109,13 +109,13 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114b';
+import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const MACHINES = [
-  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', L:1161, W:810, H:1025, glb:'mesa-vibradora.glb?v=20261114b', usdz:'mesa-vibradora.usdz?v=20261114b' },
-  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', L:1983, W:749, H:1062, glb:'encordadora/encordadora.glb?v=20261114b', usdz:'encordadora/encordadora.usdz?v=20261114b' },
+  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', L:1161, W:810, H:1025, glb:'mesa-vibradora.glb?v=20261114c', usdz:'mesa-vibradora.usdz?v=20261114c' },
+  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', L:1983, W:749, H:1062, glb:'encordadora/encordadora.glb?v=20261114c', usdz:'encordadora/encordadora.usdz?v=20261114c' },
 ];
 let current = MACHINES[0];
 
@@ -342,7 +342,7 @@ function renderCompat() {
   if (isIOS) {
     noar.innerHTML = 'En iPhone se abre con el visor de Apple:' +
       (single ? [current] : MACHINES).map(m => `<a rel="ar" href="${m.usdz}"><img alt="" style="display:none">Ver en mi barco: ${m.name}</a>`).join('') +
-      (single ? '' : '<a rel="ar" href="las-dos.usdz?v=20261114b"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
+      (single ? '' : '<a rel="ar" href="las-dos.usdz?v=20261114c"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
   } else {
     noar.innerHTML = 'Este móvil no tiene realidad aumentada, pero puedes usar el <strong>modo cámara</strong>: ' +
       'las máquinas aparecen sobre la imagen de la cámara a tamaño real (medidas aproximadas).' + camLink +

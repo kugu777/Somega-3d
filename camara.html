@@ -56,11 +56,11 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114b';
+import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
 
 const MACHINES = [
-  { id:'mesa', name:'Mesa vibradora', glb:'mesa-vibradora.glb?v=20261114b' },
-  { id:'enc',  name:'Encordadora', glb:'encordadora/encordadora.glb?v=20261114b' },
+  { id:'mesa', name:'Mesa vibradora', glb:'mesa-vibradora.glb?v=20261114c' },
+  { id:'enc',  name:'Encordadora', glb:'encordadora/encordadora.glb?v=20261114c' },
 ];
 let armed = MACHINES.find(m => '#' + m.id === location.hash) || MACHINES[0];
 let phoneH = 1.40;
