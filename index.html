@@ -18,7 +18,9 @@
   .card { background:rgba(255,255,255,.05); border:1.5px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; text-align:left; color:var(--ink); font:inherit; }
   .card.on { border-color:var(--blue); background:rgba(31,79,209,.18); }
   .card b { display:block; font-size:15px; margin-bottom:4px; }
-  .card span { font-size:12px; color:var(--muted); }
+  .card span { font-size:12px; color:var(--muted); display:block; }
+  .card em { display:block; margin-top:8px; font-style:normal; font-size:13px; color:#7fa6ff; font-weight:600; }
+  .sec { font-size:17px; margin:22px 18px 2px; }
   .both { margin:10px 18px 0; display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); }
   .both input { width:18px; height:18px; accent-color:var(--blue); }
   #view { position:relative; height:52vh; min-height:320px; margin-top:10px;
@@ -61,20 +63,20 @@
 </header>
 
 <h1>Máquinas en tu barco</h1>
-<p class="sub">Elige una máquina, colócala a tamaño real y añade otra si quieres. · Real-size AR.</p>
+<p class="sub">Toca una máquina para ver su ficha y ponerla en tu barco. · Real-size AR.</p>
 
 <div class="cards" id="cards"></div>
-<label class="both"><input type="checkbox" id="both"> Ver las dos juntas</label>
+<h2 class="sec">Varias máquinas a la vez</h2><p class="sub">Pon una en el barco, luego la otra, y mira cómo quedan juntas.</p><input type="checkbox" id="both" checked hidden>
 
 <div id="view"><div id="loading">Cargando modelo…</div></div>
 
-<div class="go"><button class="btn" id="start" disabled>Colocar en mi barco</button></div>
+<div class="go"><button class="btn" id="start" disabled>Colocar varias en mi barco</button></div>
 <div id="noar"></div>
 
 <div class="help">
   <strong>Cómo funciona</strong>
   <ol>
-    <li>Pulsa <strong>“Colocar en mi barco”</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
+    <li>Pulsa <strong>“Colocar varias en mi barco”</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
     <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Elige la otra y toca otra vez: verás las dos.</li>
     <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
   </ol>
@@ -99,8 +101,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const MACHINES = [
-  { id:'mesa', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', glb:'mesa-vibradora.glb', usdz:'mesa-vibradora.usdz' },
-  { id:'enc',  name:'Encordadora', dims:'1983 × 749 × 1062 mm', glb:'encordadora/encordadora.glb', usdz:'encordadora/encordadora.usdz' },
+  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', glb:'mesa-vibradora.glb', usdz:'mesa-vibradora.usdz' },
+  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', glb:'encordadora/encordadora.glb', usdz:'encordadora/encordadora.usdz' },
 ];
 let current = MACHINES[0];
 
@@ -109,11 +111,30 @@ const view = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.xr.enabled = true;
 view.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+// Entorno de taller con focos: da los reflejos del inox
+function steelEnv() {
+  const env = new THREE.Scene();
+  const geo = new THREE.SphereGeometry(10, 48, 24), pos = geo.attributes.position, col = [];
+  const top = new THREE.Color(0xf2f4f8), mid = new THREE.Color(0xa9b1bd), low = new THREE.Color(0x6a727d), bot = new THREE.Color(0x454b53);
+  for (let i = 0; i < pos.count; i++) {
+    const t = pos.getY(i) / 10, c = new THREE.Color();
+    if (t > 0.05) c.lerpColors(mid, top, Math.min(1, t * 1.4)); else if (t > -0.05) c.lerpColors(low, mid, (t + 0.05) / 0.1); else c.lerpColors(low, bot, Math.min(1, -t * 1.5));
+    col.push(c.r, c.g, c.b);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  env.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.BackSide })));
+  const lamp = new THREE.MeshBasicMaterial({ color:new THREE.Color(5,5,5) });
+  [[0,6,0, 8,0.2,1.2],[-6,3,2, 0.2,3,5],[6,3,-2, 0.2,3,5],[0,3,7, 6,2,0.2]].forEach(([x,y,z,w,h,d]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), lamp); m.position.set(x,y,z); env.add(m);
+  });
+  return new THREE.PMREMGenerator(renderer).fromScene(env, 0.02).texture;
+}
+scene.environment = steelEnv();
+const INOX = new THREE.MeshStandardMaterial({ color:0xc9ced6, metalness:1, roughness:0.28, envMapIntensity:1.25 });
 scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(2, 4, 3); scene.add(sun);
 
@@ -138,7 +159,10 @@ function withShadow(obj) {
 
 const loader = new GLTFLoader(), cache = {};
 function load(m) {
-  if (!cache[m.id]) cache[m.id] = new Promise((ok, ko) => loader.load(m.glb, g => ok(g.scene), undefined, ko));
+  if (!cache[m.id]) cache[m.id] = new Promise((ok, ko) => loader.load(m.glb, g => {
+    g.scene.traverse(o => { if (o.isMesh && o.material && o.material.name === 'inox') { const m = INOX.clone(); m.flatShading = o.material.flatShading; o.material = m; } });
+    ok(g.scene);
+  }, undefined, ko));
   return cache[m.id];
 }
 async function instance(m) {
@@ -177,11 +201,11 @@ async function showPreview() {
 const cards = document.getElementById('cards');
 MACHINES.forEach(m => {
   const b = document.createElement('button'); b.className = 'card'; b.dataset.id = m.id;
-  b.innerHTML = `<b>${m.name}</b><span>${m.dims}</span>`;
-  b.onclick = () => { current = m; document.getElementById('both').checked = false; paintCards(); showPreview(); };
+  b.innerHTML = `<b>${m.name}</b><span>${m.dims}</span><em>Ver ficha y en mi barco ›</em>`;
+  b.onclick = () => { location.href = m.page; };
   cards.appendChild(b);
 });
-function paintCards() { [...cards.children].forEach(c => c.classList.toggle('on', c.dataset.id === current.id)); }
+function paintCards() {}
 document.getElementById('both').onchange = showPreview;
 paintCards(); showPreview();
 
