@@ -21,6 +21,10 @@
   .card span { font-size:12px; color:var(--muted); display:block; }
   .card em { display:block; margin-top:8px; font-style:normal; font-size:13px; color:#7fa6ff; font-weight:600; }
   .sec { font-size:17px; margin:22px 18px 2px; }
+  .back { display:inline-block; margin:12px 18px 0; color:#7fa6ff; text-decoration:none; font-size:15px; font-weight:600; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; padding:0 18px; }
+  .chips span { background:rgba(255,255,255,.07); border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:13px; }
+  .chips b { font-weight:650; }
   .both { margin:10px 18px 0; display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); }
   .both input { width:18px; height:18px; accent-color:var(--blue); }
   #view { position:relative; height:52vh; min-height:320px; margin-top:10px;
@@ -62,11 +66,19 @@
   <a href="https://maquinariabatea.com/">maquinariabatea.com</a>
 </header>
 
+<div id="menuHead">
 <h1>Máquinas en tu barco</h1>
 <p class="sub">Toca una máquina para ver su ficha y ponerla en tu barco. · Real-size AR.</p>
-
 <div class="cards" id="cards"></div>
-<h2 class="sec">Varias máquinas a la vez</h2><p class="sub">Pon una en el barco, luego la otra, y mira cómo quedan juntas.</p><input type="checkbox" id="both" checked hidden>
+<h2 class="sec">Varias máquinas a la vez</h2><p class="sub">Pon una en el barco, luego la otra, y mira cómo quedan juntas.</p>
+</div>
+<div id="singleHead" hidden>
+<a class="back" href="#">‹ Todas las máquinas</a>
+<h1 id="sTitle"></h1>
+<p class="sub">Modelo 3D a tamaño real · Real-size 3D model</p>
+<div class="chips" id="sDims"></div>
+</div>
+<input type="checkbox" id="both" checked hidden>
 
 <div id="view"><div id="loading">Cargando modelo…</div></div>
 
@@ -76,11 +88,11 @@
 <div class="help">
   <strong>Cómo funciona</strong>
   <ol>
-    <li>Pulsa <strong>“Colocar varias en mi barco”</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
+    <li>Pulsa el <strong>botón azul</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
     <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Elige la otra y toca otra vez: verás las dos.</li>
     <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
   </ol>
-  <p style="margin:8px 0 0"><strong>EN:</strong> tap “Colocar en mi barco”, pick a machine at the top, tap the deck to place it. Add the other one too. Tap a machine to rotate, move or remove it. Size is fixed at 1:1.</p>
+  <p style="margin:8px 0 0"><strong>EN:</strong> tap the blue button, pick a machine at the top, tap the deck to place it. Add the other one too. Tap a machine to rotate, move or remove it. Size is fixed at 1:1.</p>
 </div>
 <div class="diag" id="diag"></div>
 <footer>© SOMEGA · Modelos orientativos de dimensiones exteriores. No válidos para fabricación.</footer>
@@ -97,12 +109,13 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const MACHINES = [
-  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', glb:'mesa-vibradora.glb', usdz:'mesa-vibradora.usdz' },
-  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', glb:'encordadora/encordadora.glb', usdz:'encordadora/encordadora.usdz' },
+  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', L:1161, W:810, H:1025, glb:'mesa-vibradora.glb', usdz:'mesa-vibradora.usdz' },
+  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', L:1983, W:749, H:1062, glb:'encordadora/encordadora.glb', usdz:'encordadora/encordadora.usdz' },
 ];
 let current = MACHINES[0];
 
@@ -111,6 +124,7 @@ const view = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.xr.enabled = true;
 view.appendChild(renderer.domElement);
@@ -134,9 +148,9 @@ function steelEnv() {
   return new THREE.PMREMGenerator(renderer).fromScene(env, 0.02).texture;
 }
 scene.environment = steelEnv();
-const INOX = new THREE.MeshStandardMaterial({ color:0xc9ced6, metalness:1, roughness:0.45, envMapIntensity:0.95 });
 scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.6));
-const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(2, 4, 3); scene.add(sun);
+const sun = addShadowLight(scene, 4);
+const floorS = shadowFloor(); scene.add(floorS);
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 50);
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -160,8 +174,7 @@ function withShadow(obj) {
 const loader = new GLTFLoader(), cache = {};
 function load(m) {
   if (!cache[m.id]) cache[m.id] = new Promise((ok, ko) => loader.load(m.glb, g => {
-    g.scene.traverse(o => { if (o.isMesh && o.material && o.material.name === 'inox') { const m = INOX.clone(); m.flatShading = o.material.flatShading; o.material = m; } });
-    ok(g.scene);
+    ok(finishModel(g.scene));
   }, undefined, ko));
   return cache[m.id];
 }
@@ -202,12 +215,26 @@ const cards = document.getElementById('cards');
 MACHINES.forEach(m => {
   const b = document.createElement('button'); b.className = 'card'; b.dataset.id = m.id;
   b.innerHTML = `<b>${m.name}</b><span>${m.dims}</span><em>Ver ficha y en mi barco ›</em>`;
-  b.onclick = () => { location.href = m.page; };
+  b.onclick = () => { location.hash = m.id; };
   cards.appendChild(b);
 });
-function paintCards() {}
-document.getElementById('both').onchange = showPreview;
-paintCards(); showPreview();
+let single = false, arOK = null;
+function route() {
+  const m = MACHINES.find(x => '#' + x.id === location.hash);
+  single = !!m; if (m) current = m;
+  document.getElementById('menuHead').hidden = single;
+  document.getElementById('singleHead').hidden = !single;
+  document.getElementById('both').checked = !single;
+  if (single) {
+    document.getElementById('sTitle').textContent = m.name;
+    document.getElementById('sDims').innerHTML = `<span>Largo / Length <b>${m.L} mm</b></span><span>Ancho / Width <b>${m.W} mm</b></span><span>Alto / Height <b>${m.H} mm</b></span><span>Inox AISI 304</span>`;
+    document.title = m.name + ' · SOMEGA';
+  } else document.title = 'Máquinas SOMEGA en realidad aumentada';
+  document.getElementById('start').textContent = single ? 'Ver en mi barco' : 'Colocar varias en mi barco';
+  scrollTo(0, 0); showPreview(); if (arOK !== null) renderCompat();
+}
+addEventListener('hashchange', route);
+route();
 
 // ---------- realidad aumentada ----------
 const ui = document.getElementById('ar-ui'), top = document.getElementById('ar-top'),
@@ -272,14 +299,14 @@ async function startAR() {
       requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','local-floor'], domOverlay:{ root: ui } });
   } catch (e) { diag('No se pudo iniciar AR: ' + e.message); return; }
   armed = current; paintTop(); ui.classList.add('on'); hint.textContent = 'Apunta al suelo del barco…';
-  preview.visible = false; scene.background = null;
+  preview.visible = false; floorS.visible = false; scene.background = null;
   renderer.xr.setReferenceSpaceType('local');
   await renderer.xr.setSession(session);
   const viewerSpace = await session.requestReferenceSpace('viewer');
   hitSource = await session.requestHitTestSource({ space: viewerSpace });
   session.addEventListener('end', () => {
     hitSource = null; session = null; ui.classList.remove('on'); reticle.visible = false;
-    placed.clear(); select(null); preview.visible = true; resize();
+    placed.clear(); select(null); preview.visible = true; floorS.visible = true; resize();
   });
 }
 
@@ -303,21 +330,25 @@ diag('Navegador: ' + navigator.userAgent.replace(/^Mozilla\/5.0 /, ''));
   let ok = false;
   try { ok = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); } catch (e) { diag('WebXR error: ' + e.message); }
   diag('AR de Chrome (WebXR): ' + ok);
+  arOK = ok; renderCompat();
+})();
+function renderCompat() {
+  const ok = arOK;
   const startBtn = document.getElementById('start'), noar = document.getElementById('noar');
   const camLink = '<a href="camara.html#' + current.id + '">Abrir modo cámara (cualquier móvil)</a>';
-  if (ok) { startBtn.disabled = false; startBtn.onclick = startAR;
+  if (ok) { startBtn.style.display = ''; startBtn.disabled = false; startBtn.onclick = startAR;
     noar.style.display = 'block'; noar.innerHTML = '¿No te funciona? Prueba el modo cámara, sirve en todos los móviles (medidas aproximadas).' + camLink; return; }
   startBtn.style.display = 'none'; noar.style.display = 'block';
   if (isIOS) {
-    noar.innerHTML = 'En iPhone se abre con el visor de Apple (una cosa cada vez, o las dos juntas):' +
-      MACHINES.map(m => `<a rel="ar" href="${m.usdz}"><img alt="" style="display:none">Ver en AR: ${m.name}</a>`).join('') +
-      '<a rel="ar" href="las-dos.usdz"><img alt="" style="display:none">Ver en AR: las dos juntas</a>' + camLink;
+    noar.innerHTML = 'En iPhone se abre con el visor de Apple:' +
+      (single ? [current] : MACHINES).map(m => `<a rel="ar" href="${m.usdz}"><img alt="" style="display:none">Ver en mi barco: ${m.name}</a>`).join('') +
+      (single ? '' : '<a rel="ar" href="las-dos.usdz"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
   } else {
     noar.innerHTML = 'Este móvil no tiene realidad aumentada, pero puedes usar el <strong>modo cámara</strong>: ' +
       'las máquinas aparecen sobre la imagen de la cámara a tamaño real (medidas aproximadas).' + camLink +
       '<p style="margin:10px 0 0;font-size:13px">En Samsung, para la realidad aumentada completa, abre la página en <strong>Google Chrome</strong> en vez de Samsung Internet.</p>';
   }
-})();
+}
 </script>
 </body>
 </html>
