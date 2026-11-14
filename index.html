@@ -2,118 +2,294 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mesa vibradora 220 V · SOMEGA</title>
-<script type="module" src="model-viewer.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Máquinas SOMEGA en realidad aumentada</title>
 <style>
-  :root { --navy:#0b1730; --blue:#1f4fd1; --ink:#e9eef8; --muted:#9fb0cc; }
-  * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; background:var(--navy); color:var(--ink);
+  :root { --navy:#0b1730; --blue:#1f4fd1; --ink:#e9eef8; --muted:#9fb0cc; --line:rgba(255,255,255,.1); }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:var(--navy); color:var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  body { display:flex; flex-direction:column; min-height:100dvh; }
-  header { display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+  header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); }
   header img { height:22px; display:block; }
-  header .web { color:var(--muted); font-size:13px; text-decoration:none; }
-  .title { padding:14px 18px 4px; }
-  .title h1 { margin:0; font-size:22px; font-weight:650; letter-spacing:.2px; }
-  .title p { margin:4px 0 0; color:var(--muted); font-size:14px; }
-  .dims { display:flex; flex-wrap:wrap; gap:8px; padding:10px 18px 4px; }
-  .chip { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
-    border-radius:999px; padding:6px 12px; font-size:13px; }
-  .chip b { font-weight:650; }
-  model-viewer { flex:1; width:100%; min-height:420px; background:
-    radial-gradient(ellipse at 50% 40%, #1d2b4d 0%, var(--navy) 70%);
-    --poster-color: transparent; }
-  .ar-btn { position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
-    background:var(--blue); color:#fff; border:0; border-radius:999px; padding:14px 22px;
-    font-size:16px; font-weight:600; display:flex; align-items:center; gap:10px;
-    box-shadow:0 6px 24px rgba(31,79,209,.45); cursor:pointer; white-space:nowrap; }
-  .ar-btn small { font-weight:400; opacity:.8; }
-  .help { padding:14px 18px 22px; color:var(--muted); font-size:14px; line-height:1.5; }
+  header a { color:var(--muted); font-size:13px; text-decoration:none; }
+  h1 { font-size:20px; margin:16px 18px 2px; }
+  .sub { margin:0 18px 12px; color:var(--muted); font-size:14px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 18px; }
+  .card { background:rgba(255,255,255,.05); border:1.5px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; text-align:left; color:var(--ink); font:inherit; }
+  .card.on { border-color:var(--blue); background:rgba(31,79,209,.18); }
+  .card b { display:block; font-size:15px; margin-bottom:4px; }
+  .card span { font-size:12px; color:var(--muted); }
+  .both { margin:10px 18px 0; display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); }
+  .both input { width:18px; height:18px; accent-color:var(--blue); }
+  #view { position:relative; height:52vh; min-height:320px; margin-top:10px;
+    background: radial-gradient(ellipse at 50% 40%, #1d2b4d 0%, var(--navy) 70%); }
+  #view canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:14px; pointer-events:none; }
+  .go { display:flex; justify-content:center; padding:14px 18px 6px; }
+  .btn { background:var(--blue); color:#fff; border:0; border-radius:999px; padding:15px 24px; font-size:16px; font-weight:600;
+    box-shadow:0 6px 24px rgba(31,79,209,.45); cursor:pointer; font-family:inherit; }
+  .btn[disabled] { opacity:.45; box-shadow:none; }
+  #noar { display:none; margin:8px 18px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; font-size:14px; color:var(--muted); line-height:1.5; }
+  #noar a { color:#fff; display:block; margin-top:8px; padding:10px 14px; border:1px solid rgba(255,255,255,.3); border-radius:999px; text-decoration:none; text-align:center; }
+  .help { padding:10px 18px; color:var(--muted); font-size:14px; line-height:1.5; }
   .help ol { margin:6px 0 0; padding-left:20px; }
   .help strong { color:var(--ink); }
-  .hint { position:absolute; top:12px; left:50%; transform:translateX(-50%);
-    font-size:12px; color:var(--muted); background:rgba(0,0,0,.25); padding:4px 10px; border-radius:999px; white-space:nowrap; }
-  footer { padding:12px 18px 20px; font-size:12px; color:var(--muted); border-top:1px solid rgba(255,255,255,.08); }
-  .alt { padding:10px 18px 0; text-align:center; }
-  .alt-btn { display:inline-block; color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:999px;
-    padding:10px 16px; font-size:14px; text-decoration:none; }
-  .stat { color:#ffb4a8; font-size:13px; margin:8px 0 0; min-height:1em; }
-  .diag { margin:0 18px 16px; padding:10px 12px; border:1px dashed rgba(255,255,255,.25); border-radius:10px; font-size:12px; color:var(--muted); }
-  .diag pre { white-space:pre-wrap; word-break:break-word; margin:6px 0 0; font-size:12px; color:var(--ink); }
+  .diag { margin:6px 18px 14px; font-size:11px; color:var(--muted); white-space:pre-wrap; word-break:break-word; font-family:ui-monospace,monospace; opacity:.8; }
+  footer { padding:12px 18px 22px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); }
+
+  /* Interfaz dentro de la realidad aumentada */
+  #ar-ui { display:none; position:fixed; inset:0; pointer-events:none; font-family:system-ui,-apple-system,Roboto,sans-serif; }
+  #ar-ui.on { display:block; }
+  #ar-ui .bar { pointer-events:auto; position:absolute; left:0; right:0; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:12px; }
+  #ar-ui .top { top:0; padding-top:max(12px, env(safe-area-inset-top)); }
+  #ar-ui .bottom { bottom:0; padding-bottom:max(18px, env(safe-area-inset-bottom)); }
+  #ar-ui button { pointer-events:auto; border:0; border-radius:999px; padding:12px 16px; font-size:15px; font-weight:600;
+    background:rgba(10,20,40,.78); color:#fff; font-family:inherit; }
+  #ar-ui button.arm { background:#1f4fd1; }
+  #ar-ui button.exit { background:rgba(180,30,30,.85); }
+  #ar-hint { position:absolute; top:50%; left:50%; transform:translate(-50%, 70px); background:rgba(0,0,0,.55); color:#fff;
+    padding:8px 14px; border-radius:999px; font-size:14px; white-space:nowrap; pointer-events:none; }
+  #ar-sel { display:none; }
+  #ar-sel.on { display:flex; }
 </style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/jsm/" } }</script>
 </head>
 <body>
 <header>
   <img src="logo.png" alt="SOMEGA">
-  <a class="web" href="https://maquinariabatea.com/">maquinariabatea.com</a>
+  <a href="https://maquinariabatea.com/">maquinariabatea.com</a>
 </header>
 
-<div class="title">
-  <h1>Mesa vibradora 220 V</h1>
-  <p>Modelo 3D a tamaño real · Real-size 3D model</p>
-</div>
+<h1>Máquinas en tu barco</h1>
+<p class="sub">Elige una máquina, colócala a tamaño real y añade otra si quieres. · Real-size AR.</p>
 
-<div class="dims">
-  <span class="chip">Largo / Length <b>1161 mm</b></span>
-  <span class="chip">Ancho / Width <b>810 mm</b></span>
-  <span class="chip">Alto / Height <b>1025 mm</b></span>
-  <span class="chip">Inox AISI 304</span>
-</div>
+<div class="cards" id="cards"></div>
+<label class="both"><input type="checkbox" id="both"> Ver las dos juntas</label>
 
-<model-viewer id="mv" src="mesa-vibradora.glb" ios-src="mesa-vibradora.usdz" alt="Mesa vibradora SOMEGA"
-  ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
-  camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="2500"
-  camera-orbit="35deg 70deg auto" shadow-intensity="1" shadow-softness="0.8"
-  exposure="1.05" environment-image="neutral" interaction-prompt="none">
-  <span class="hint">Gira con el dedo · Drag to rotate</span>
-  <button slot="ar-button" class="ar-btn">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
-    Ver en mi barco <small>· View in AR</small>
-  </button>
-</model-viewer>
+<div id="view"><div id="loading">Cargando modelo…</div></div>
 
-<div class="alt">
-  <a id="alt" class="alt-btn" href="intent://arvr.google.com/scene-viewer/1.0?file=https://kugu777.github.io/Somega-3d/mesa-vibradora.glb&amp;mode=ar_preferred&amp;resizable=false&amp;title=Mesa%20vibradora%20SOMEGA#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.google.ar.core;end;">Alternativa: abrir con la app Google</a>
-  <p id="arstat" class="stat"></p>
-</div>
+<div class="go"><button class="btn" id="start" disabled>Colocar en mi barco</button></div>
+<div id="noar"></div>
+
 <div class="help">
-  <strong>Cómo colocarla en el barco</strong>
+  <strong>Cómo funciona</strong>
   <ol>
-    <li>Pulsa <strong>“Ver en mi barco”</strong> y mueve el móvil despacio apuntando a la cubierta.</li>
-    <li>La mesa aparece a <strong>tamaño real</strong>. Arrástrala con un dedo y gírala con dos.</li>
-    <li>Rodéala andando para comprobar pasos y accesos.</li>
+    <li>Pulsa <strong>“Colocar en mi barco”</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
+    <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Elige la otra y toca otra vez: verás las dos.</li>
+    <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
   </ol>
-  <p style="margin:10px 0 0"><strong>How to place it:</strong> tap “View in AR”, point at the deck, drag to move, twist with two fingers to rotate. The size is fixed at 1:1.</p>
+  <p style="margin:8px 0 0"><strong>EN:</strong> tap “Colocar en mi barco”, pick a machine at the top, tap the deck to place it. Add the other one too. Tap a machine to rotate, move or remove it. Size is fixed at 1:1.</p>
+</div>
+<div class="diag" id="diag"></div>
+<footer>© SOMEGA · Modelos orientativos de dimensiones exteriores. No válidos para fabricación.</footer>
+
+<div id="ar-ui">
+  <div class="bar top" id="ar-top"></div>
+  <div id="ar-hint">Apunta al suelo del barco…</div>
+  <div class="bar bottom" id="ar-sel">
+    <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button>
+    <button id="move">Mover aquí</button><button id="del">Quitar</button>
+  </div>
 </div>
 
-<div class="diag"><strong>Diagnóstico</strong><pre id="diag">comprobando…</pre></div>
-<footer>© SOMEGA · Modelo orientativo de dimensiones exteriores. No válido para fabricación.</footer>
-<script>
-(function(){
-  var mv=document.getElementById('mv'), st=document.getElementById('arstat');
-  var ua=navigator.userAgent;
-  if(!/Android/i.test(ua)) document.getElementById('alt').style.display='none';
-  mv.addEventListener('ar-status', function(e){
-    if(e.detail.status==='failed') st.textContent='No se pudo abrir la cámara AR. Prueba el botón "Abrir con Google" e instala "Servicios de Google Play para RA" si lo pide.';
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const MACHINES = [
+  { id:'mesa', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', glb:'mesa-vibradora.glb', usdz:'mesa-vibradora.usdz' },
+  { id:'enc',  name:'Encordadora', dims:'1983 × 749 × 1062 mm', glb:'encordadora/encordadora.glb', usdz:'encordadora/encordadora.usdz' },
+];
+let current = MACHINES[0];
+
+// ---------- 3D ----------
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.xr.enabled = true;
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(2, 4, 3); scene.add(sun);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 50);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false;
+const preview = new THREE.Group(); scene.add(preview);
+
+function shadowTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), r = g.createRadialGradient(64,64,10,64,64,64);
+  r.addColorStop(0,'rgba(0,0,0,.55)'); r.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = r; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c);
+}
+const SHADOW = shadowTex();
+function withShadow(obj) {
+  const box = new THREE.Box3().setFromObject(obj), s = box.getSize(new THREE.Vector3());
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(s.x*1.25, s.z*1.25),
+    new THREE.MeshBasicMaterial({ map:SHADOW, transparent:true, depthWrite:false }));
+  p.rotation.x = -Math.PI/2; p.position.y = 0.002; obj.add(p); return obj;
+}
+
+const loader = new GLTFLoader(), cache = {};
+function load(m) {
+  if (!cache[m.id]) cache[m.id] = new Promise((ok, ko) => loader.load(m.glb, g => ok(g.scene), undefined, ko));
+  return cache[m.id];
+}
+async function instance(m) {
+  const src = await load(m), o = src.clone(true);
+  o.userData.machine = m.id; return withShadow(o);
+}
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+async function showPreview() {
+  document.getElementById('loading').style.display = 'flex';
+  preview.clear();
+  const both = document.getElementById('both').checked;
+  const list = both ? MACHINES : [current];
+  let x = 0;
+  for (const m of list) {
+    const o = await instance(m);
+    const s = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3());
+    if (both) { o.position.x = x + s.x/2; x += s.x + 0.6; }
+    preview.add(o);
+  }
+  if (both) preview.children.forEach(o => o.position.x -= x/2 - 0.3);
+  const box = new THREE.Box3().setFromObject(preview), size = box.getSize(new THREE.Vector3()).length();
+  const c = box.getCenter(new THREE.Vector3());
+  controls.target.copy(c);
+  camera.position.copy(c).add(new THREE.Vector3(0.75, 0.5, 0.9).normalize().multiplyScalar(size * 1.25));
+  controls.update();
+  document.getElementById('loading').style.display = 'none';
+}
+
+// ---------- menú ----------
+const cards = document.getElementById('cards');
+MACHINES.forEach(m => {
+  const b = document.createElement('button'); b.className = 'card'; b.dataset.id = m.id;
+  b.innerHTML = `<b>${m.name}</b><span>${m.dims}</span>`;
+  b.onclick = () => { current = m; document.getElementById('both').checked = false; paintCards(); showPreview(); };
+  cards.appendChild(b);
+});
+function paintCards() { [...cards.children].forEach(c => c.classList.toggle('on', c.dataset.id === current.id)); }
+document.getElementById('both').onchange = showPreview;
+paintCards(); showPreview();
+
+// ---------- realidad aumentada ----------
+const ui = document.getElementById('ar-ui'), top = document.getElementById('ar-top'),
+      hint = document.getElementById('ar-hint'), selBar = document.getElementById('ar-sel');
+ui.addEventListener('beforexrselect', e => { if (e.target.closest('button')) e.preventDefault(); });
+let armed = MACHINES[0], hitSource = null, session = null, selected = null;
+const placed = new THREE.Group(); scene.add(placed);
+const reticle = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.16, 40).rotateX(-Math.PI/2),
+  new THREE.MeshBasicMaterial({ color:0xffffff })); reticle.matrixAutoUpdate = false; reticle.visible = false; scene.add(reticle);
+const outline = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color:0x3d7bff }));
+outline.visible = false; scene.add(outline);
+
+function paintTop() {
+  top.innerHTML = '';
+  MACHINES.forEach(m => {
+    const b = document.createElement('button'); b.textContent = '＋ ' + m.name;
+    if (m === armed) b.className = 'arm';
+    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.name; };
+    top.appendChild(b);
   });
-})();
-</script>
-<script>
-(async function(){
-  var out=[], d=document.getElementById('diag'), mv=document.getElementById('mv');
-  function show(){ d.textContent=out.join('\n'); }
-  out.push('Navegador: '+navigator.userAgent.replace(/^Mozilla\/5.0 /,''));
-  out.push('Seguro (https): '+window.isSecureContext);
-  out.push('WebXR: '+(!!navigator.xr));
-  try{ out.push('AR de Chrome: '+(navigator.xr? await navigator.xr.isSessionSupported('immersive-ar'):false)); }catch(e){ out.push('AR de Chrome: error '+e.message); }
-  show();
-  await customElements.whenDefined('model-viewer');
-  setTimeout(function(){ out.push('Botón AR activo: '+mv.canActivateAR); show(); },1500);
-  mv.addEventListener('ar-status',function(e){ out.push('Estado AR: '+e.detail.status); show(); });
-  window.addEventListener('error',function(e){ out.push('Error: '+e.message); show(); });
-  window.addEventListener('unhandledrejection',function(e){ out.push('Error: '+(e.reason&&e.reason.message||e.reason)); show(); });
+  const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
+  x.onclick = () => session && session.end(); top.appendChild(x);
+}
+function select(o) {
+  selected = o; selBar.classList.toggle('on', !!o); outline.visible = !!o;
+  if (!o) return;
+  o.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(o.children[0] || o);
+  const local = new THREE.Box3().setFromObject(o); // contorno en planta
+  const inv = new THREE.Matrix4().copy(o.matrixWorld).invert();
+  const lb = new THREE.Box3().copy(local).applyMatrix4(inv);
+  const y = 0.01, pts = [[lb.min.x,y,lb.min.z],[lb.max.x,y,lb.min.z],[lb.max.x,y,lb.max.z],[lb.min.x,y,lb.max.z]]
+    .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
+  outline.geometry.setFromPoints(pts);
+}
+function yawToViewer(pos) {
+  const cam = renderer.xr.getCamera(), cp = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
+  return Math.atan2(cp.x - pos.x, cp.z - pos.z);
+}
+const ray = new THREE.Raycaster(), controller = renderer.xr.getController(0); scene.add(controller);
+controller.addEventListener('select', async () => {
+  const m4 = new THREE.Matrix4().extractRotation(controller.matrixWorld);
+  ray.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+  ray.ray.direction.set(0, 0, -1).applyMatrix4(m4);
+  const hits = ray.intersectObjects(placed.children, true);
+  if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
+  if (!reticle.visible) return;
+  const o = await instance(armed);
+  o.position.setFromMatrixPosition(reticle.matrix);
+  o.rotation.y = yawToViewer(o.position);
+  placed.add(o); select(o);
+  hint.textContent = 'Toca una máquina para girarla o moverla';
+});
+document.getElementById('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
+document.getElementById('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
+document.getElementById('move').onclick = () => { if (selected && reticle.visible) { selected.position.setFromMatrixPosition(reticle.matrix); select(selected); } };
+document.getElementById('del').onclick = () => { if (selected) { placed.remove(selected); select(null); } };
+
+async function startAR() {
+  try {
+    session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','local-floor'], domOverlay:{ root: ui } });
+  } catch (e) { diag('No se pudo iniciar AR: ' + e.message); return; }
+  armed = current; paintTop(); ui.classList.add('on'); hint.textContent = 'Apunta al suelo del barco…';
+  preview.visible = false; scene.background = null;
+  renderer.xr.setReferenceSpaceType('local');
+  await renderer.xr.setSession(session);
+  const viewerSpace = await session.requestReferenceSpace('viewer');
+  hitSource = await session.requestHitTestSource({ space: viewerSpace });
+  session.addEventListener('end', () => {
+    hitSource = null; session = null; ui.classList.remove('on'); reticle.visible = false;
+    placed.clear(); select(null); preview.visible = true; resize();
+  });
+}
+
+renderer.setAnimationLoop((t, frame) => {
+  if (frame && hitSource) {
+    const ref = renderer.xr.getReferenceSpace(), r = frame.getHitTestResults(hitSource);
+    if (r.length) {
+      reticle.visible = true; reticle.matrix.fromArray(r[0].getPose(ref).transform.matrix);
+      if (hint.textContent.startsWith('Apunta')) hint.textContent = 'Toca el suelo para poner: ' + armed.name;
+    } else reticle.visible = false;
+  } else controls.update();
+  renderer.render(scene, camera);
+});
+
+// ---------- compatibilidad ----------
+const diagEl = document.getElementById('diag'), lines = [];
+function diag(s) { lines.push(s); diagEl.textContent = lines.join('\n'); }
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+diag('Navegador: ' + navigator.userAgent.replace(/^Mozilla\/5.0 /, ''));
+(async () => {
+  let ok = false;
+  try { ok = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); } catch (e) { diag('WebXR error: ' + e.message); }
+  diag('AR de Chrome (WebXR): ' + ok);
+  const startBtn = document.getElementById('start'), noar = document.getElementById('noar');
+  if (ok) { startBtn.disabled = false; startBtn.onclick = startAR; return; }
+  startBtn.style.display = 'none'; noar.style.display = 'block';
+  if (isIOS) {
+    noar.innerHTML = 'En iPhone se abre con el visor de Apple (una cosa cada vez, o las dos juntas):' +
+      MACHINES.map(m => `<a rel="ar" href="${m.usdz}"><img alt="" style="display:none">Ver en AR: ${m.name}</a>`).join('') +
+      '<a rel="ar" href="las-dos.usdz"><img alt="" style="display:none">Ver en AR: las dos juntas</a>';
+  } else {
+    noar.innerHTML = 'Este navegador no permite realidad aumentada. Abre esta página en <strong>Google Chrome</strong> ' +
+      '(no desde WhatsApp ni otra app) y comprueba que tienes instalado <strong>“Servicios de Google Play para RA”</strong>.';
+  }
 })();
 </script>
 </body>
