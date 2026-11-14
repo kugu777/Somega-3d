@@ -134,7 +134,7 @@ function steelEnv() {
   return new THREE.PMREMGenerator(renderer).fromScene(env, 0.02).texture;
 }
 scene.environment = steelEnv();
-const INOX = new THREE.MeshStandardMaterial({ color:0xc9ced6, metalness:1, roughness:0.28, envMapIntensity:1.25 });
+const INOX = new THREE.MeshStandardMaterial({ color:0xc9ced6, metalness:1, roughness:0.45, envMapIntensity:0.95 });
 scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(2, 4, 3); scene.add(sun);
 
