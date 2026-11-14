@@ -40,6 +40,8 @@
   .alt-btn { display:inline-block; color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:999px;
     padding:10px 16px; font-size:14px; text-decoration:none; }
   .stat { color:#ffb4a8; font-size:13px; margin:8px 0 0; min-height:1em; }
+  .diag { margin:0 18px 16px; padding:10px 12px; border:1px dashed rgba(255,255,255,.25); border-radius:10px; font-size:12px; color:var(--muted); }
+  .diag pre { white-space:pre-wrap; word-break:break-word; margin:6px 0 0; font-size:12px; color:var(--ink); }
 </style>
 </head>
 <body>
@@ -86,6 +88,7 @@
   <p style="margin:10px 0 0"><strong>How to place it:</strong> tap “View in AR”, point at the deck, drag to move, twist with two fingers to rotate. The size is fixed at 1:1.</p>
 </div>
 
+<div class="diag"><strong>Diagnóstico</strong><pre id="diag">comprobando…</pre></div>
 <footer>© SOMEGA · Modelo orientativo de dimensiones exteriores. No válido para fabricación.</footer>
 <script>
 (function(){
@@ -95,6 +98,22 @@
   mv.addEventListener('ar-status', function(e){
     if(e.detail.status==='failed') st.textContent='No se pudo abrir la cámara AR. Prueba el botón "Abrir con Google" e instala "Servicios de Google Play para RA" si lo pide.';
   });
+})();
+</script>
+<script>
+(async function(){
+  var out=[], d=document.getElementById('diag'), mv=document.getElementById('mv');
+  function show(){ d.textContent=out.join('\n'); }
+  out.push('Navegador: '+navigator.userAgent.replace(/^Mozilla\/5.0 /,''));
+  out.push('Seguro (https): '+window.isSecureContext);
+  out.push('WebXR: '+(!!navigator.xr));
+  try{ out.push('AR de Chrome: '+(navigator.xr? await navigator.xr.isSessionSupported('immersive-ar'):false)); }catch(e){ out.push('AR de Chrome: error '+e.message); }
+  show();
+  await customElements.whenDefined('model-viewer');
+  setTimeout(function(){ out.push('Botón AR activo: '+mv.canActivateAR); show(); },1500);
+  mv.addEventListener('ar-status',function(e){ out.push('Estado AR: '+e.detail.status); show(); });
+  window.addEventListener('error',function(e){ out.push('Error: '+e.message); show(); });
+  window.addEventListener('unhandledrejection',function(e){ out.push('Error: '+(e.reason&&e.reason.message||e.reason)); show(); });
 })();
 </script>
 </body>
