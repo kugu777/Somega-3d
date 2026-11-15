@@ -19,6 +19,7 @@
   .card { background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; text-align:left; color:var(--ink); font:inherit; }
   .card b { display:block; font-size:15px; margin-bottom:4px; }
   .card span { font-size:12px; color:var(--muted); display:block; line-height:1.5; }
+  .card .note { display:inline-block; font-size:11px; font-weight:600; color:#ffd27a; background:rgba(255,190,60,.15); border-radius:999px; padding:2px 8px; vertical-align:2px; }
   .card em { display:block; margin-top:8px; font-style:normal; font-size:13px; color:#7fa6ff; font-weight:600; }
   .sec { font-size:17px; margin:22px 18px 4px; }
   .back { display:inline-block; margin:12px 18px 0; color:#7fa6ff; text-decoration:none; font-size:15px; font-weight:600; }
@@ -155,7 +156,7 @@
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115b';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115c';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;
@@ -246,7 +247,7 @@ async function showPreview(reframe = true) {
   preview.clear();
   if (objs.length > 1) {              // en fila, separadas 0,6 m
     let x = 0;
-    for (const o of objs) { const s = sizeMM(o); o.position.x = x + s.W/2000; x += s.W/1000 + 0.6; }
+    for (const o of objs) { const w = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()).x; o.position.x = x + w/2; x += w + 0.6; }
     objs.forEach(o => o.position.x -= (x - 0.6) / 2);
   }
   objs.forEach(o => preview.add(o));
@@ -264,7 +265,7 @@ MACHINES.forEach(m => {
   const b = document.createElement('button'); b.className = 'card';
   const n = items(m).length;
   const opts = n ? m.groups.map(g => g.one ? `${g.items.length} ${g.title.toLowerCase()}s a elegir` : `${g.items.length} extra${g.items.length > 1 ? 's' : ''}`).join(' · ') : 'Sin extras por ahora';
-  b.innerHTML = `<b>${m.name}</b><span id="cd-${m.id}">…</span><span>${opts}</span><em>Ver en 360° y extras ›</em>`;
+  b.innerHTML = `<b>${m.name}${m.note ? ` <span class="note">${m.note}</span>` : ''}</b><span id="cd-${m.id}">…</span><span>${opts}</span><em>Ver en 360° y extras ›</em>`;
   b.onclick = () => { location.hash = m.id; };
   cards.appendChild(b);
   buildMachine(m, defaultCfg(m)).then(o => { const s = sizeMM(o); $('cd-' + m.id).textContent = `${s.L} × ${s.W} × ${s.H} mm`; });
@@ -322,7 +323,7 @@ function route() {
   $('menuHead').hidden = single;
   $('singleHead').hidden = !single;
   if (single) {
-    $('sTitle').textContent = current.name;
+    $('sTitle').innerHTML = current.name + (current.note ? ` <span style="font-size:13px;font-weight:600;color:#ffd27a">· ${current.note}</span>` : '');
     document.title = current.name + ' · Catálogo SOMEGA';
     paintConfig();
     items(current).forEach(i => loadGLB(i.glb));      // precarga de los extras

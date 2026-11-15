@@ -10,12 +10,15 @@ from OCP.collections import IndexedDataMap_TCollection_AsciiString_TCollection_A
 from OCP.Message import Message_ProgressRange
 
 src, out = sys.argv[1], sys.argv[2]
+# opcional: tolerancia de malla en mm y ángulo en rad (de serie 0.3 / 0.3; máquinas grandes: 1.0 0.5)
+defl = float(sys.argv[3]) if len(sys.argv) > 3 else 0.3
+ang = float(sys.argv[4]) if len(sys.argv) > 4 else 0.3
 doc = TDocStd_Document(TCollection_ExtendedString("XmlOcaf"))
 r = STEPCAFControl_Reader(); r.SetColorMode(True); r.SetNameMode(True)
 assert r.ReadFile(src) == 1
 r.Transfer(doc)
 st = XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())
-BRepMesh_IncrementalMesh(st.GetOneShape(), 0.3, False, 0.3, True)
+BRepMesh_IncrementalMesh(st.GetOneShape(), defl, False, ang, True)
 w = RWGltf_CafWriter(TCollection_AsciiString(out), True)
 cs = w.ChangeCoordinateSystemConverter()
 cs.SetInputLengthUnit(0.001)  # mm -> m
