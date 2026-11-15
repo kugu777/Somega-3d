@@ -49,6 +49,7 @@
   .opt { display:flex; align-items:center; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:12px; }
   .opt.on { border-color:var(--blue); background:rgba(31,79,209,.16); }
   .opt label { flex:1; display:flex; align-items:center; gap:12px; cursor:pointer; min-width:0; }
+  .opt .noin { width:22px; text-align:center; color:#7fa6ff; font-size:18px; flex:none; }
   .opt input { width:22px; height:22px; accent-color:var(--blue); flex:none; margin:0; }
   .opt b { display:block; font-size:15px; }
   .opt small { display:block; font-size:12px; color:var(--muted); margin-top:3px; }
@@ -154,7 +155,7 @@
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115a';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115b';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;
@@ -262,8 +263,8 @@ const cards = $('cards');
 MACHINES.forEach(m => {
   const b = document.createElement('button'); b.className = 'card';
   const n = items(m).length;
-  const opts = n ? m.groups.map(g => `${g.items.length} ${g.title.toLowerCase()}${g.one && g.items.length > 1 ? 's' : ''}`).join(' · ') : 'Sin extras por ahora';
-  b.innerHTML = `<b>${m.name}</b><span id="cd-${m.id}">…</span><span>${opts.replace('parrillas', 'parrillas a elegir')}</span><em>Ver en 360° y extras ›</em>`;
+  const opts = n ? m.groups.map(g => g.one ? `${g.items.length} ${g.title.toLowerCase()}s a elegir` : `${g.items.length} extra${g.items.length > 1 ? 's' : ''}`).join(' · ') : 'Sin extras por ahora';
+  b.innerHTML = `<b>${m.name}</b><span id="cd-${m.id}">…</span><span>${opts}</span><em>Ver en 360° y extras ›</em>`;
   b.onclick = () => { location.hash = m.id; };
   cards.appendChild(b);
   buildMachine(m, defaultCfg(m)).then(o => { const s = sizeMM(o); $('cd-' + m.id).textContent = `${s.L} × ${s.W} × ${s.H} mm`; });
@@ -280,10 +281,11 @@ function paintConfig() {
     for (const it of g.items) {
       const on = cfg.includes(it.id), d = document.createElement('div');
       d.className = 'opt' + (on ? ' on' : '');
-      d.innerHTML = `<label><input type="${g.one ? 'radio' : 'checkbox'}" name="g-${g.title}" ${on ? 'checked' : ''}>
-        <span><b>${it.name}${it.tag ? `<span class="tag">${it.tag}</span>` : ''}</b><small id="sz-${it.id}">…</small></span></label>
+      d.innerHTML = `<label>${it.view ? '<span class="noin">◇</span>' : `<input type="${g.one ? 'radio' : 'checkbox'}" name="g-${g.title}" ${on ? 'checked' : ''}>`}
+        <span><b>${it.name}${it.tag ? `<span class="tag">${it.tag}</span>` : ''}</b><small id="sz-${it.id}">…</small>${it.view ? '<small>Montado en la máquina: próximamente</small>' : ''}</span></label>
         <button>Ver 360°</button>`;
-      d.querySelector('input').onchange = () => {
+      if (it.view) d.querySelector('label').onclick = () => d.querySelector('button').click();
+      else d.querySelector('input').onchange = () => {
         CFG[m.id] = toggle(m, CFG[m.id], it.id);
         history.replaceState(null, '', hashOf(m, CFG[m.id]));
         solo = null; paintConfig(); showPreview(false); renderCompat();

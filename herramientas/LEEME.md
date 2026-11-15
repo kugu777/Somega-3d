@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas.
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261115a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261115b`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -37,6 +37,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
   - Negro: halador (con el cubo) y tacos de las patas.
   - Azul: motores hidráulicos y **reductora**.
   - Blanco: tuerca de nylon y brida del motor.
+- Extra **Cartucho para carga de red** (`encordadora/cartucho-red.glb`, de `SOMEGA_chapa_cartuchos_maquina.step`, 728 × 287 × 322 mm, todo inox). De momento solo se ve suelto en 360° (`view: true` en `lib/catalogo.js`): falta saber dónde va montado en la encordadora. Se hace con `build_extra.py`.
 - Correspondencia de colores del dibujo: ver `E` en `build_v2.py`. (3,13,50) y (70,85,93) son azul; (3,3,3), (1,1,1) y (139,147,156) son negro; los crema son blanco; el resto es inox.
 
 ## Cómo añadir extras a una máquina
@@ -62,6 +63,6 @@ Hace falta: `cadquery-ocp`, `trimesh`, `pygltflib` y `usd-core` (pip).
 ## Pendiente
 - Que Vicente pruebe el modo cámara en su móvil y diga qué sensor sale abajo a la izquierda.
 - Confirmar el cambio del travesaño trasero 40×40 de la mesa nueva: misma medida exterior, distinto detalle.
-- Extras de la encordadora (cuando haya STEP).
+- Montar el cartucho para carga de red en la encordadora: hace falta el STEP del conjunto con el cartucho puesto, o su posición.
 - Botón "Pedir presupuesto": poner WhatsApp o correo de SOMEGA (ahora lleva a la web).
 - Más máquinas cuando haya STEP (pesadora ensacadora, etc.).
