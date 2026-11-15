@@ -3,40 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Máquinas SOMEGA en realidad aumentada</title>
+<title>Catálogo SOMEGA · Maquinaria inox para bateas</title>
 <style>
-  :root { --navy:#0b1730; --blue:#1f4fd1; --ink:#e9eef8; --muted:#9fb0cc; --line:rgba(255,255,255,.1); }
+  :root { --navy:#0b1730; --blue:#1f4fd1; --ink:#e9eef8; --muted:#9fb0cc; --line:rgba(255,255,255,.1); --card:rgba(255,255,255,.05); }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; background:var(--navy); color:var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); }
   header img { height:22px; display:block; }
   header a { color:var(--muted); font-size:13px; text-decoration:none; }
-  h1 { font-size:20px; margin:16px 18px 2px; }
-  .sub { margin:0 18px 12px; color:var(--muted); font-size:14px; }
-  .cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 18px; }
-  .card { background:rgba(255,255,255,.05); border:1.5px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; text-align:left; color:var(--ink); font:inherit; }
-  .card.on { border-color:var(--blue); background:rgba(31,79,209,.18); }
+  main { max-width:980px; margin:0 auto; }
+  h1 { font-size:21px; margin:16px 18px 2px; }
+  .sub { margin:0 18px 12px; color:var(--muted); font-size:14px; line-height:1.45; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; padding:0 18px; }
+  .card { background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; text-align:left; color:var(--ink); font:inherit; }
   .card b { display:block; font-size:15px; margin-bottom:4px; }
-  .card span { font-size:12px; color:var(--muted); display:block; }
+  .card span { font-size:12px; color:var(--muted); display:block; line-height:1.5; }
   .card em { display:block; margin-top:8px; font-style:normal; font-size:13px; color:#7fa6ff; font-weight:600; }
-  .sec { font-size:17px; margin:22px 18px 2px; }
+  .sec { font-size:17px; margin:22px 18px 4px; }
   .back { display:inline-block; margin:12px 18px 0; color:#7fa6ff; text-decoration:none; font-size:15px; font-weight:600; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; padding:0 18px; }
   .chips span { background:rgba(255,255,255,.07); border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:13px; }
   .chips b { font-weight:650; }
-  .both { margin:10px 18px 0; display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); }
-  .both input { width:18px; height:18px; accent-color:var(--blue); }
+
   #view { position:relative; height:52vh; min-height:320px; margin-top:10px;
     background: radial-gradient(ellipse at 50% 40%, #1d2b4d 0%, var(--navy) 70%); }
   #view canvas { display:block; width:100%; height:100%; touch-action:none; }
   #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:14px; pointer-events:none; }
+  .vbtn { position:absolute; border:0; border-radius:999px; padding:9px 14px; font:600 13px system-ui,sans-serif;
+    background:rgba(10,20,40,.78); color:#fff; cursor:pointer; }
+  #spin { right:12px; bottom:12px; }
+  #spin.on { background:var(--blue); }
+  #solo { left:12px; top:12px; display:none; background:rgba(31,79,209,.92); }
+
   .go { display:flex; justify-content:center; padding:14px 18px 6px; }
   .btn { background:var(--blue); color:#fff; border:0; border-radius:999px; padding:15px 24px; font-size:16px; font-weight:600;
-    box-shadow:0 6px 24px rgba(31,79,209,.45); cursor:pointer; font-family:inherit; }
+    box-shadow:0 6px 24px rgba(31,79,209,.45); cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block; }
   .btn[disabled] { opacity:.45; box-shadow:none; }
   #noar { display:none; margin:8px 18px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; font-size:14px; color:var(--muted); line-height:1.5; }
   #noar a { color:#fff; display:block; margin-top:10px; padding:13px 14px; font-weight:600; background:#1f4fd1; border:0; border-radius:999px; text-decoration:none; text-align:center; }
+
+  /* Configurador */
+  .grp { margin:6px 18px 0; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .opts { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:10px; padding:8px 18px 4px; }
+  .opt { display:flex; align-items:center; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:12px; }
+  .opt.on { border-color:var(--blue); background:rgba(31,79,209,.16); }
+  .opt label { flex:1; display:flex; align-items:center; gap:12px; cursor:pointer; min-width:0; }
+  .opt input { width:22px; height:22px; accent-color:var(--blue); flex:none; margin:0; }
+  .opt b { display:block; font-size:15px; }
+  .opt small { display:block; font-size:12px; color:var(--muted); margin-top:3px; }
+  .opt .tag { display:inline-block; font-size:11px; font-weight:600; color:#bcd0ff; background:rgba(31,79,209,.35); border-radius:999px; padding:2px 8px; margin-left:6px; vertical-align:2px; }
+  .opt button { flex:none; border:1px solid var(--line); background:rgba(255,255,255,.06); color:var(--ink); border-radius:999px; padding:9px 12px; font:600 13px system-ui,sans-serif; cursor:pointer; }
+  .sum { margin:14px 18px 0; padding:14px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid var(--line); font-size:14px; line-height:1.5; }
+  .sum b { color:#fff; }
+  .sum .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .sum a, .sum button { flex:1; min-width:140px; text-align:center; text-decoration:none; border:0; border-radius:999px; padding:12px 14px; font:600 14px system-ui,sans-serif; cursor:pointer; }
+  .sum .pri { background:var(--blue); color:#fff; }
+  .sum .sec2 { background:rgba(255,255,255,.08); color:var(--ink); }
+
   .help { padding:10px 18px; color:var(--muted); font-size:14px; line-height:1.5; }
   .help ol { margin:6px 0 0; padding-left:20px; }
   .help strong { color:var(--ink); }
@@ -65,37 +89,57 @@
   <img src="logo.png" alt="SOMEGA">
   <a href="https://maquinariabatea.com/">maquinariabatea.com</a>
 </header>
+<main>
 
 <div id="menuHead">
-<h1>Máquinas en tu barco</h1>
-<p class="sub">Toca una máquina para ver su ficha y ponerla en tu barco. · Real-size AR.</p>
-<div class="cards" id="cards"></div>
-<h2 class="sec">Varias máquinas a la vez</h2><p class="sub">Pon una en el barco, luego la otra, y mira cómo quedan juntas.</p>
+  <h1>Catálogo SOMEGA</h1>
+  <p class="sub">Maquinaria de acero inoxidable para bateas. Toca una máquina para verla en 360°, elegir sus extras y ponerla en tu barco a tamaño real.</p>
+  <div class="cards" id="cards"></div>
+  <h2 class="sec">Todas juntas</h2>
+  <p class="sub">Pon una máquina en el barco, luego la otra, y mira cómo quedan juntas.</p>
 </div>
-<div id="singleHead" hidden>
-<a class="back" href="#">‹ Todas las máquinas</a>
-<h1 id="sTitle"></h1>
-<p class="sub">Modelo 3D a tamaño real · Real-size 3D model</p>
-<div class="chips" id="sDims"></div>
-</div>
-<input type="checkbox" id="both" checked hidden>
 
-<div id="view"><div id="loading">Cargando modelo…</div></div>
+<div id="singleHead" hidden>
+  <a class="back" href="#">‹ Todo el catálogo</a>
+  <h1 id="sTitle"></h1>
+  <p class="sub">Inox AISI 304 · Gira la máquina con el dedo para verla por todos los lados</p>
+  <div class="chips" id="sDims"></div>
+</div>
+
+<div id="view">
+  <div id="loading">Cargando modelo…</div>
+  <button class="vbtn" id="solo"></button>
+  <button class="vbtn on" id="spin">↻ 360°</button>
+</div>
+
+<div id="config" hidden>
+  <h2 class="sec" id="cTitle">Configura tu máquina</h2>
+  <p class="sub">Marca los extras para montarlos en la máquina. Con <b>Ver 360°</b> ves cada pieza sola.</p>
+  <div id="groups"></div>
+  <div class="sum">
+    Tu configuración: <b id="sumTxt"></b>
+    <div class="row">
+      <a class="pri" id="ask" href="https://maquinariabatea.com/" target="_blank" rel="noopener">Pedir presupuesto</a>
+      <button class="sec2" id="share">Compartir esta configuración</button>
+    </div>
+  </div>
+</div>
 
 <div class="go"><button class="btn" id="start" disabled>Colocar varias en mi barco</button></div>
 <div id="noar"></div>
 
 <div class="help">
-  <strong>Cómo funciona</strong>
+  <strong>Cómo ponerla en tu barco</strong>
   <ol>
     <li>Pulsa el <strong>botón azul</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
-    <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Elige la otra y toca otra vez: verás las dos.</li>
+    <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Sale con los extras que hayas marcado.</li>
     <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
   </ol>
-  <p style="margin:8px 0 0"><strong>EN:</strong> tap the blue button, pick a machine at the top, tap the deck to place it. Add the other one too. Tap a machine to rotate, move or remove it. Size is fixed at 1:1.</p>
+  <p style="margin:8px 0 0"><strong>EN:</strong> spin the model to see it in 360°, tick the extras, then tap the blue button and tap the deck to place it at real size.</p>
 </div>
 <div class="diag" id="diag"></div>
 <footer>© SOMEGA · Modelos orientativos de dimensiones exteriores. No válidos para fabricación.</footer>
+</main>
 
 <div id="ar-ui">
   <div class="bar top" id="ar-top"></div>
@@ -108,26 +152,23 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
+import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115a';
 
-const MACHINES = [
-  { id:'mesa', page:'mesa/', name:'Mesa vibradora 220 V', dims:'1161 × 810 × 1025 mm', L:1161, W:810, H:1025, glb:'mesa-vibradora.glb?v=20261114c', usdz:'mesa-vibradora.usdz?v=20261114c' },
-  { id:'enc', page:'encordadora/', name:'Encordadora', dims:'1983 × 749 × 1062 mm', L:1983, W:749, H:1062, glb:'encordadora/encordadora.glb?v=20261114c', usdz:'encordadora/encordadora.usdz?v=20261114c' },
-];
-let current = MACHINES[0];
+const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
+let current = MACHINES[0], single = false, solo = null;
+const $ = id => document.getElementById(id);
 
 // ---------- 3D ----------
-const view = document.getElementById('view');
+const view = $('view');
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.xr.enabled = true;
-view.appendChild(renderer.domElement);
+view.prepend(renderer.domElement);
 const scene = new THREE.Scene();
 // Entorno de taller con focos: da los reflejos del inox
 function steelEnv() {
@@ -149,13 +190,17 @@ function steelEnv() {
 }
 scene.environment = steelEnv();
 scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 0.6));
-const sun = addShadowLight(scene, 4);
+addShadowLight(scene, 4);
 const floorS = shadowFloor(); scene.add(floorS);
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 50);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.enablePan = false;
+controls.autoRotate = true; controls.autoRotateSpeed = 1.6;
+controls.addEventListener('start', () => setSpin(false));
 const preview = new THREE.Group(); scene.add(preview);
+function setSpin(on) { controls.autoRotate = on; $('spin').classList.toggle('on', on); }
+$('spin').onclick = () => setSpin(!controls.autoRotate);
 
 function shadowTex() {
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -165,23 +210,12 @@ function shadowTex() {
 }
 const SHADOW = shadowTex();
 function withShadow(obj) {
-  const box = new THREE.Box3().setFromObject(obj), s = box.getSize(new THREE.Vector3());
+  const box = new THREE.Box3().setFromObject(obj), s = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   const p = new THREE.Mesh(new THREE.PlaneGeometry(s.x*1.25, s.z*1.25),
     new THREE.MeshBasicMaterial({ map:SHADOW, transparent:true, depthWrite:false }));
-  p.rotation.x = -Math.PI/2; p.position.y = 0.002; obj.add(p); return obj;
+  p.rotation.x = -Math.PI/2; p.position.set(c.x, 0.002, c.z); p.raycast = () => {}; obj.add(p); return obj;
 }
-
-const loader = new GLTFLoader(), cache = {};
-function load(m) {
-  if (!cache[m.id]) cache[m.id] = new Promise((ok, ko) => loader.load(m.glb, g => {
-    ok(finishModel(g.scene));
-  }, undefined, ko));
-  return cache[m.id];
-}
-async function instance(m) {
-  const src = await load(m), o = src.clone(true);
-  o.userData.machine = m.id; return withShadow(o);
-}
+async function instance(m) { return withShadow(await buildMachine(m, CFG[m.id])); }
 
 function resize() {
   const w = view.clientWidth, h = view.clientHeight;
@@ -189,56 +223,116 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-async function showPreview() {
-  document.getElementById('loading').style.display = 'flex';
-  preview.clear();
-  const both = document.getElementById('both').checked;
-  const list = both ? MACHINES : [current];
-  let x = 0;
-  for (const m of list) {
-    const o = await instance(m);
-    const s = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3());
-    if (both) { o.position.x = x + s.x/2; x += s.x + 0.6; }
-    preview.add(o);
-  }
-  if (both) preview.children.forEach(o => o.position.x -= x/2 - 0.3);
+function frame() {
   const box = new THREE.Box3().setFromObject(preview), size = box.getSize(new THREE.Vector3()).length();
   const c = box.getCenter(new THREE.Vector3());
   controls.target.copy(c);
-  camera.position.copy(c).add(new THREE.Vector3(0.75, 0.5, 0.9).normalize().multiplyScalar(size * 1.25));
+  // que quepa entera también en móvil vertical (campo horizontal estrecho)
+  const v = THREE.MathUtils.degToRad(camera.fov) / 2, h = Math.atan(Math.tan(v) * camera.aspect);
+  const dist = (size / 2) / Math.sin(Math.min(v, h)) * 1.05;
+  camera.position.copy(c).add(new THREE.Vector3(0.75, 0.5, 0.9).normalize().multiplyScalar(dist));
   controls.update();
-  document.getElementById('loading').style.display = 'none';
+}
+let token = 0;
+async function showPreview(reframe = true) {
+  const my = ++token;
+  $('loading').style.display = 'flex';
+  let objs = [];
+  if (solo) objs = [withShadow(await buildItem(solo))];
+  else if (single) objs = [await instance(current)];
+  else for (const m of MACHINES) objs.push(await instance(m));
+  if (my !== token) return;           // llegó otra petición mientras cargaba
+  preview.clear();
+  if (objs.length > 1) {              // en fila, separadas 0,6 m
+    let x = 0;
+    for (const o of objs) { const s = sizeMM(o); o.position.x = x + s.W/2000; x += s.W/1000 + 0.6; }
+    objs.forEach(o => o.position.x -= (x - 0.6) / 2);
+  }
+  objs.forEach(o => preview.add(o));
+  if (reframe) frame();
+  if (single && !solo) {              // medidas de la configuración elegida (sin la sombra)
+    const s = sizeMM(await buildMachine(current, CFG[current.id]));
+    $('sDims').innerHTML = `<span>Largo / Length <b>${s.L} mm</b></span><span>Ancho / Width <b>${s.W} mm</b></span><span>Alto / Height <b>${s.H} mm</b></span>`;
+  }
+  $('loading').style.display = 'none';
 }
 
-// ---------- menú ----------
-const cards = document.getElementById('cards');
+// ---------- catálogo ----------
+const cards = $('cards');
 MACHINES.forEach(m => {
-  const b = document.createElement('button'); b.className = 'card'; b.dataset.id = m.id;
-  b.innerHTML = `<b>${m.name}</b><span>${m.dims}</span><em>Ver ficha y en mi barco ›</em>`;
+  const b = document.createElement('button'); b.className = 'card';
+  const n = items(m).length;
+  const opts = n ? m.groups.map(g => `${g.items.length} ${g.title.toLowerCase()}${g.one && g.items.length > 1 ? 's' : ''}`).join(' · ') : 'Sin extras por ahora';
+  b.innerHTML = `<b>${m.name}</b><span id="cd-${m.id}">…</span><span>${opts.replace('parrillas', 'parrillas a elegir')}</span><em>Ver en 360° y extras ›</em>`;
   b.onclick = () => { location.hash = m.id; };
   cards.appendChild(b);
+  buildMachine(m, defaultCfg(m)).then(o => { const s = sizeMM(o); $('cd-' + m.id).textContent = `${s.L} × ${s.W} × ${s.H} mm`; });
 });
-let single = false, arOK = null;
+
+function paintConfig() {
+  const m = current, cfg = CFG[m.id];
+  $('config').hidden = !m.groups.length;
+  $('cTitle').textContent = 'Configura tu ' + m.short.toLowerCase();
+  const root = $('groups'); root.innerHTML = '';
+  for (const g of m.groups) {
+    const h = document.createElement('div'); h.className = 'grp'; h.textContent = g.title + (g.one ? ' · elige una' : ''); root.appendChild(h);
+    const box = document.createElement('div'); box.className = 'opts'; root.appendChild(box);
+    for (const it of g.items) {
+      const on = cfg.includes(it.id), d = document.createElement('div');
+      d.className = 'opt' + (on ? ' on' : '');
+      d.innerHTML = `<label><input type="${g.one ? 'radio' : 'checkbox'}" name="g-${g.title}" ${on ? 'checked' : ''}>
+        <span><b>${it.name}${it.tag ? `<span class="tag">${it.tag}</span>` : ''}</b><small id="sz-${it.id}">…</small></span></label>
+        <button>Ver 360°</button>`;
+      d.querySelector('input').onchange = () => {
+        CFG[m.id] = toggle(m, CFG[m.id], it.id);
+        history.replaceState(null, '', hashOf(m, CFG[m.id]));
+        solo = null; paintConfig(); showPreview(false); renderCompat();
+      };
+      d.querySelector('button').onclick = () => { solo = it; paintSolo(); showPreview(); view.scrollIntoView({ behavior:'smooth', block:'center' }); };
+      box.appendChild(d);
+      itemSize(it).then(s => { const e = $('sz-' + it.id); if (e) e.textContent = `${s.L} × ${s.W} × ${s.H} mm`; });
+    }
+  }
+  $('sumTxt').textContent = label(m, cfg);
+  const msg = `Hola, me interesa la ${label(m, cfg).toLowerCase()}.`;
+  $('ask').title = msg;
+}
+function paintSolo() {
+  const b = $('solo');
+  b.style.display = solo ? 'block' : 'none';
+  if (solo) b.textContent = `Viendo solo: ${solo.name}  ✕`;
+}
+$('solo').onclick = () => { solo = null; paintSolo(); showPreview(); };
+$('share').onclick = async () => {
+  const url = location.href.split('#')[0] + hashOf(current, CFG[current.id]);
+  const text = label(current, CFG[current.id]) + ' · SOMEGA';
+  try {
+    if (navigator.share) await navigator.share({ title:text, text, url });
+    else { await navigator.clipboard.writeText(url); $('share').textContent = 'Enlace copiado ✓'; setTimeout(() => $('share').textContent = 'Compartir esta configuración', 2000); }
+  } catch (e) {}
+};
+
+let arOK = null;
 function route() {
-  const m = MACHINES.find(x => '#' + x.id === location.hash);
-  single = !!m; if (m) current = m;
-  document.getElementById('menuHead').hidden = single;
-  document.getElementById('singleHead').hidden = !single;
-  document.getElementById('both').checked = !single;
+  const r = parseHash(location.hash);
+  single = !!r; solo = null; paintSolo();
+  if (r) { current = r.m; CFG[r.m.id] = r.cfg; }
+  $('menuHead').hidden = single;
+  $('singleHead').hidden = !single;
   if (single) {
-    document.getElementById('sTitle').textContent = m.name;
-    document.getElementById('sDims').innerHTML = `<span>Largo / Length <b>${m.L} mm</b></span><span>Ancho / Width <b>${m.W} mm</b></span><span>Alto / Height <b>${m.H} mm</b></span><span>Inox AISI 304</span>`;
-    document.title = m.name + ' · SOMEGA';
-  } else document.title = 'Máquinas SOMEGA en realidad aumentada';
-  document.getElementById('start').textContent = single ? 'Ver en mi barco' : 'Colocar varias en mi barco';
-  scrollTo(0, 0); showPreview(); if (arOK !== null) renderCompat();
+    $('sTitle').textContent = current.name;
+    document.title = current.name + ' · Catálogo SOMEGA';
+    paintConfig();
+    items(current).forEach(i => loadGLB(i.glb));      // precarga de los extras
+  } else { $('config').hidden = true; document.title = 'Catálogo SOMEGA · Maquinaria inox para bateas'; }
+  $('start').textContent = single ? 'Ver en mi barco' : 'Colocar varias en mi barco';
+  setSpin(true); scrollTo(0, 0); showPreview(); if (arOK !== null) renderCompat();
 }
 addEventListener('hashchange', route);
 route();
 
 // ---------- realidad aumentada ----------
-const ui = document.getElementById('ar-ui'), top = document.getElementById('ar-top'),
-      hint = document.getElementById('ar-hint'), selBar = document.getElementById('ar-sel');
+const ui = $('ar-ui'), top = $('ar-top'), hint = $('ar-hint'), selBar = $('ar-sel');
 ui.addEventListener('beforexrselect', e => { if (e.target.closest('button')) e.preventDefault(); });
 let armed = MACHINES[0], hitSource = null, session = null, selected = null;
 const placed = new THREE.Group(); scene.add(placed);
@@ -250,9 +344,9 @@ outline.visible = false; scene.add(outline);
 function paintTop() {
   top.innerHTML = '';
   MACHINES.forEach(m => {
-    const b = document.createElement('button'); b.textContent = '＋ ' + m.name;
+    const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
     if (m === armed) b.className = 'arm';
-    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.name; };
+    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; };
     top.appendChild(b);
   });
   const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
@@ -262,10 +356,8 @@ function select(o) {
   selected = o; selBar.classList.toggle('on', !!o); outline.visible = !!o;
   if (!o) return;
   o.updateMatrixWorld(true);
-  const b = new THREE.Box3().setFromObject(o.children[0] || o);
-  const local = new THREE.Box3().setFromObject(o); // contorno en planta
   const inv = new THREE.Matrix4().copy(o.matrixWorld).invert();
-  const lb = new THREE.Box3().copy(local).applyMatrix4(inv);
+  const lb = new THREE.Box3().setFromObject(o).applyMatrix4(inv);
   const y = 0.01, pts = [[lb.min.x,y,lb.min.z],[lb.max.x,y,lb.min.z],[lb.max.x,y,lb.max.z],[lb.min.x,y,lb.max.z]]
     .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
   outline.geometry.setFromPoints(pts);
@@ -288,10 +380,10 @@ controller.addEventListener('select', async () => {
   placed.add(o); select(o);
   hint.textContent = 'Toca una máquina para girarla o moverla';
 });
-document.getElementById('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
-document.getElementById('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
-document.getElementById('move').onclick = () => { if (selected && reticle.visible) { selected.position.setFromMatrixPosition(reticle.matrix); select(selected); } };
-document.getElementById('del').onclick = () => { if (selected) { placed.remove(selected); select(null); } };
+$('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
+$('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
+$('move').onclick = () => { if (selected && reticle.visible) { selected.position.setFromMatrixPosition(reticle.matrix); select(selected); } };
+$('del').onclick = () => { if (selected) { placed.remove(selected); select(null); } };
 
 async function startAR() {
   try {
@@ -315,14 +407,14 @@ renderer.setAnimationLoop((t, frame) => {
     const ref = renderer.xr.getReferenceSpace(), r = frame.getHitTestResults(hitSource);
     if (r.length) {
       reticle.visible = true; reticle.matrix.fromArray(r[0].getPose(ref).transform.matrix);
-      if (hint.textContent.startsWith('Apunta')) hint.textContent = 'Toca el suelo para poner: ' + armed.name;
+      if (hint.textContent.startsWith('Apunta')) hint.textContent = 'Toca el suelo para poner: ' + armed.short;
     } else reticle.visible = false;
   } else controls.update();
   renderer.render(scene, camera);
 });
 
 // ---------- compatibilidad ----------
-const diagEl = document.getElementById('diag'), lines = [];
+const diagEl = $('diag'), lines = [];
 function diag(s) { lines.push(s); diagEl.textContent = lines.join('\n'); }
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 diag('Navegador: ' + navigator.userAgent.replace(/^Mozilla\/5.0 /, ''));
@@ -334,14 +426,14 @@ diag('Navegador: ' + navigator.userAgent.replace(/^Mozilla\/5.0 /, ''));
 })();
 function renderCompat() {
   const ok = arOK;
-  const startBtn = document.getElementById('start'), noar = document.getElementById('noar');
-  const camLink = '<a href="camara.html#' + current.id + '">Abrir modo cámara (cualquier móvil)</a>';
+  const startBtn = $('start'), noar = $('noar');
+  const camLink = '<a href="camara.html' + (single ? hashOf(current, CFG[current.id]) : '') + '">Abrir modo cámara (cualquier móvil)</a>';
   if (ok) { startBtn.style.display = ''; startBtn.disabled = false; startBtn.onclick = startAR;
     noar.style.display = 'block'; noar.innerHTML = '¿No te funciona? Prueba el modo cámara, sirve en todos los móviles (medidas aproximadas).' + camLink; return; }
   startBtn.style.display = 'none'; noar.style.display = 'block';
   if (isIOS) {
     noar.innerHTML = 'En iPhone se abre con el visor de Apple:' +
-      (single ? [current] : MACHINES).map(m => `<a rel="ar" href="${m.usdz}"><img alt="" style="display:none">Ver en mi barco: ${m.name}</a>`).join('') +
+      (single ? [current] : MACHINES).map(m => `<a rel="ar" href="${m.usdz(CFG[m.id])}"><img alt="" style="display:none">Ver en mi barco: ${single ? label(m, CFG[m.id]) : m.short}</a>`).join('') +
       (single ? '' : '<a rel="ar" href="las-dos.usdz?v=20261114c"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
   } else {
     noar.innerHTML = 'Este móvil no tiene realidad aumentada, pero puedes usar el <strong>modo cámara</strong>: ' +

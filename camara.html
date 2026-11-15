@@ -41,7 +41,7 @@
   <p>Las medidas son <strong>aproximadas</strong>. Para una colocación exacta usa la realidad aumentada si tu móvil la tiene.</p>
   <button class="go" id="go">Abrir cámara</button>
   <p id="err"></p>
-  <a href="./">‹ Volver al menú</a>
+  <a href="./" id="backLink">‹ Volver al catálogo</a>
 </div>
 
 <div class="bar top" id="top"></div>
@@ -55,14 +55,15 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { finishModel, addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
+import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
+import { MACHINES, defaultCfg, parseHash, buildMachine } from './lib/catalogo.js?v=20261115a';
 
-const MACHINES = [
-  { id:'mesa', name:'Mesa vibradora', glb:'mesa-vibradora.glb?v=20261114c' },
-  { id:'enc',  name:'Encordadora', glb:'encordadora/encordadora.glb?v=20261114c' },
-];
-let armed = MACHINES.find(m => '#' + m.id === location.hash) || MACHINES[0];
+// La máquina que viene en el enlace sale con sus extras; las demás, de serie
+const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
+const fromHash = parseHash(location.hash);
+if (fromHash) CFG[fromHash.m.id] = fromHash.cfg;
+let armed = fromHash ? fromHash.m : MACHINES[0];
+document.getElementById('backLink').href = './' + location.hash;
 let phoneH = 1.40;
 
 // ----- 3D -----
@@ -102,15 +103,13 @@ const SHADOW = (() => { const c = document.createElement('canvas'); c.width = c.
   const g = c.getContext('2d'), r = g.createRadialGradient(64,64,10,64,64,64);
   r.addColorStop(0,'rgba(0,0,0,.5)'); r.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0,0,128,128);
   return new THREE.CanvasTexture(c); })();
-const loader = new GLTFLoader(), cache = {};
-const load = m => cache[m.id] ||= new Promise((ok, ko) => loader.load(m.glb, g => ok(finishModel(g.scene)), undefined, ko));
 async function instance(m) {
-  const o = (await load(m)).clone(true);
-  const s = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3());
+  const o = await buildMachine(m, CFG[m.id]);
+  const b = new THREE.Box3().setFromObject(o), s = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
   const p = new THREE.Mesh(new THREE.PlaneGeometry(s.x*1.25, s.z*1.25), new THREE.MeshBasicMaterial({ map:SHADOW, transparent:true, depthWrite:false }));
-  p.rotation.x = -Math.PI/2; p.position.y = 0.003; o.add(p); return o;
+  p.rotation.x = -Math.PI/2; p.position.set(c.x, 0.003, c.z); p.raycast = () => {}; o.add(p); return o;
 }
-MACHINES.forEach(load);
+MACHINES.forEach(m => buildMachine(m, CFG[m.id]));   // precarga
 
 const placed = new THREE.Group(); scene.add(placed);
 const reticle = new THREE.Mesh(new THREE.RingGeometry(0.14, 0.19, 40).rotateX(-Math.PI/2),
@@ -162,12 +161,12 @@ const topBar = document.getElementById('top'), hint = document.getElementById('h
 let selected = null;
 function paintTop() {
   topBar.innerHTML = '';
-  MACHINES.forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.name;
+  MACHINES.forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
     if (m === armed) b.className = 'arm';
-    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.name; };
+    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.short; };
     topBar.appendChild(b); });
   const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
-  x.onclick = () => location.href = './'; topBar.appendChild(x);
+  x.onclick = () => location.href = './' + location.hash; topBar.appendChild(x);
 }
 function select(o) {
   selected = o; selBar.classList.toggle('on', !!o); outline.visible = !!o; if (!o) return;

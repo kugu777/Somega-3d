@@ -5,7 +5,7 @@
 - Normales suavizadas solo hasta 25° (aristas vivas en los pliegues/cantos).
 GLB escrito a mano con pygltflib (posiciones, normales, colores, índices, material PBR)."""
 import re, sys, numpy as np, trimesh, pygltflib as G
-sys.path.insert(0, '/home/claude/scripts')
+sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
 from build_v2 import MATS, nodes, E, E_DROP, M_DROP, mesa_cls
 
 rng = np.random.default_rng(7)
@@ -22,9 +22,9 @@ def build_group(meshes, var):
         C.append(np.full((len(p.vertices), 3), f)); off += len(p.vertices)
     return np.vstack(V), np.vstack(N), np.clip(np.vstack(C), 0, 1.0), np.vstack(F), len(parts)
 
-def write_glb(groups, out):
+def write_glb(groups, out, shift=None):
     allv = np.vstack([g[0] for g in groups.values()]); lo, hi = allv.min(0), allv.max(0)
-    shift = np.array([-(lo[0]+hi[0])/2, -lo[1], -(lo[2]+hi[2])/2])
+    if shift is None: shift = np.array([-(lo[0]+hi[0])/2, -lo[1], -(lo[2]+hi[2])/2])
     gl = G.GLTF2(asset=G.Asset(version="2.0", generator="SOMEGA"), scene=0, scenes=[G.Scene(nodes=[])])
     blob = bytearray()
     def add(arr, target, comp, typ, minmax=False):
@@ -57,5 +57,6 @@ def run(src, cls, drop, out):
         raw.setdefault(cls(name, col), []).append(mm)
     write_glb({k: build_group(v, VAR[k]) for k, v in raw.items()}, out)
 
-run('/home/claude/enc/raw.glb', lambda n, c: E.get(c, "inox"), lambda n, c: c in E_DROP, '/home/claude/encordadora_SOMEGA.glb')
-run('/home/claude/raw.glb', mesa_cls, lambda n, c: bool(M_DROP.match(n)), '/home/claude/mesa_vibradora_SOMEGA.glb')
+if __name__ == '__main__':
+  run('/home/claude/enc/raw.glb', lambda n, c: E.get(c, "inox"), lambda n, c: c in E_DROP, '/home/claude/encordadora_SOMEGA.glb')
+  run('/home/claude/raw.glb', mesa_cls, lambda n, c: bool(M_DROP.match(n)), '/home/claude/mesa_vibradora_SOMEGA.glb')

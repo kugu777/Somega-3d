@@ -1,26 +1,32 @@
-# Máquinas SOMEGA en realidad aumentada – estado y cómo seguir
+# Catálogo SOMEGA en 3D y realidad aumentada – estado y cómo seguir
 
-Actualizado: 15-11-2026
+Actualizado: 15-11-2026 (catálogo con extras)
 
 ## Enlace público
 https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 
 - Repo GitHub: **kugu777/Somega-3d** (público). Cada vez que se sube algo a `main`, GitHub Actions publica la web sola (Pages → Source: GitHub Actions).
 - Fichas: `#mesa` y `#enc` (por ejemplo https://kugu777.github.io/Somega-3d/#enc). Los enlaces antiguos `/mesa/` y `/encordadora/` redirigen a la ficha.
+- **Enlace con configuración**: `#mesa:p16,tolva,rampa` abre la mesa con esos extras ya puestos (lo genera el botón "Compartir esta configuración"). Sirve también en `camara.html#mesa:p16,tolva`.
 - Modo cámara: `camara.html` (`camara.html#mesa`, `camara.html#enc`).
 
 ## Qué hace la web
-- **Menú** con las máquinas. Al tocar una se abre su ficha: 3D, medidas y el botón "Ver en mi barco".
+- **Catálogo** con las máquinas. Al tocar una se abre su ficha: 3D girando en 360° (botón ↻ 360°), medidas de la configuración elegida, botón "Ver en mi barco".
+- **Configurador** en la ficha: grupos de opciones ("elige una", como la parrilla) y extras que se marcan o desmarcan. Se montan en su sitio en el 3D, en la realidad aumentada y en el modo cámara. "Ver 360°" enseña cada pieza sola.
+- Botones "Pedir presupuesto" (de momento lleva a maquinariabatea.com) y "Compartir esta configuración".
 - **Varias máquinas a la vez**: realidad aumentada (WebXR de Chrome). Se elige la máquina arriba, se toca el suelo para ponerla, y se puede girar 15°, mover o quitar. Se ven varias juntas.
 - **Modo cámara** para móviles sin realidad aumentada: la cámara de fondo y la máquina encima. Usa el giroscopio, la inclinación o el acelerómetro si los hay; si no hay ninguno, se mira con el dedo. Arrastrando sobre la máquina se gira. La altura del móvil se ajusta a mano (1,40 m de serie). Las medidas son aproximadas.
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas.
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
-- Las URLs de los modelos llevan versión (`?v=20261114c`). **Hay que subirla en `index.html` y `camara.html` cada vez que se cambie un modelo**; si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261115a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
-- STEP de origen: `CONJUNTO_MESA_VIBRADORA_completa.step`, versión del 14-11 con los protectores de baldera de 173,5 mm.
-- Medidas: 1161 × 810 × 1025 mm (largo × ancho × alto).
+- STEP de origen (15-11, carpeta STEP_FINALES): `1_MESA_VIBRADORA_CON_PARRILLA_22.step`, `2_PARRILLA_16_COMPLETA.step`, `3_TOLVA_RECOGIDA.step`, `4_RAMPA_DE_SALIDA.step` y `5_MESA_CON_TODOS_LOS_EXTRAS.step` (este solo para comprobar). Todos con el mismo origen.
+- Se parte en piezas (`mesa/`): `mesa-cuerpo.glb` (mesa sin parrilla), `parrilla-22.glb` (de serie), `parrilla-16.glb`, `tolva.glb` (tolva de recogida), `rampa.glb` (rampa de salida). La parrilla 22 son las piezas `PARRILLA_*`, `PLETINA_40x6_A/B` y `TUBO_10x10x1_L800_*` del STEP 1.
+- iPhone: un USDZ por configuración en `mesa/usdz/` (`mesa-p22-t0-r0.usdz` … 8 en total).
+- Medidas: 1161 × 810 × 1025 mm de serie; con la rampa de salida, 1352 mm de largo.
 - Colores: todo inox; gomas y tacos en negro; caja Schneider XALD02 en **gris oscuro** con **pulsador_1 verde** y **pulsador_2 rojo**; pegatinas SOMEGA en azul; motovibradores y prensaestopa en gris oscuro.
 - Tornillería completa en inox. No se quita ninguna pieza.
 
@@ -33,12 +39,19 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
   - Blanco: tuerca de nylon y brida del motor.
 - Correspondencia de colores del dibujo: ver `E` en `build_v2.py`. (3,13,50) y (70,85,93) son azul; (3,3,3), (1,1,1) y (139,147,156) son negro; los crema son blanco; el resto es inox.
 
+## Cómo añadir extras a una máquina
+1. STEP de la máquina y de cada extra **con el mismo origen** (exportados desde el mismo conjunto).
+2. `python3 step2glb.py` para cada uno (ver abajo).
+3. Como `build_catalogo.py`: el origen se saca de la máquina y se aplica a todas las piezas (`write_glb(..., shift=SHIFT)`).
+4. Si hay iPhone: un USDZ por configuración, como `catalogo_usdz.py`.
+5. Añadir los grupos y extras a la máquina en `lib/catalogo.js` y subir `V`.
+
 ## Cómo añadir o cambiar una máquina
 1. `python3 step2glb.py máquina.step raw.glb` (pasa el STEP a malla con sus colores, en metros y con el eje Y hacia arriba).
 2. Asignar los colores a acabados reales: por nombre de pieza (como la mesa) o por color del dibujo (como la encordadora). Ver `build_v2.py`.
 3. `build_v3.py`: tono distinto por chapa, normales suavizadas a 25° y GLB final, sin nombres de piezas.
 4. `glb2usdz.py` para iPhone.
-5. Añadir la máquina a `MACHINES` en `index.html` y `camara.html`, subir la versión `?v=` y subir el cambio a `main`.
+5. Añadir la máquina a `MACHINES` en `lib/catalogo.js`, subir la versión `V` y subir el cambio a `main`.
 Hace falta: `cadquery-ocp`, `trimesh`, `pygltflib` y `usd-core` (pip).
 
 ## Móviles probados
@@ -49,4 +62,6 @@ Hace falta: `cadquery-ocp`, `trimesh`, `pygltflib` y `usd-core` (pip).
 ## Pendiente
 - Que Vicente pruebe el modo cámara en su móvil y diga qué sensor sale abajo a la izquierda.
 - Confirmar el cambio del travesaño trasero 40×40 de la mesa nueva: misma medida exterior, distinto detalle.
+- Extras de la encordadora (cuando haya STEP).
+- Botón "Pedir presupuesto": poner WhatsApp o correo de SOMEGA (ahora lleva a la web).
 - Más máquinas cuando haya STEP (pesadora ensacadora, etc.).
