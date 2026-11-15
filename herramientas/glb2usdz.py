@@ -25,6 +25,8 @@ for i, (name, m) in enumerate(s.geometry.items()):
     sh = UsdShade.Shader.Define(stage, p + "_mat/pbr")
     sh.CreateIdAttr("UsdPreviewSurface")
     sh.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*base))
+    if len(mat.baseColorFactor) > 3 and mat.baseColorFactor[3] < 255:
+        sh.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(float(mat.baseColorFactor[3]) / 255.0)
     sh.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(float(mat.metallicFactor or 0))
     sh.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(float(mat.roughnessFactor or 0.5))
     M.CreateSurfaceOutput().ConnectToSource(sh.ConnectableAPI(), "surface")

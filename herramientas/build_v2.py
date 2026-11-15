@@ -10,7 +10,8 @@ from trimesh.visual.material import PBRMaterial
 MATS = {"inox":([0.78,0.79,0.81,1],0.9,0.45), "negro":([0.03,0.03,0.03,1],0.0,0.85),
         "azul_motor":([0.05,0.20,0.58,1],0.3,0.45), "blanco":([0.93,0.93,0.91,1],0.0,0.6),
         "azul":([0.02,0.12,0.55,1],0.0,0.45), "gris_caja":([0.62,0.63,0.62,1],0.0,0.55),
-        "verde":([0.05,0.55,0.12,1],0.0,0.4), "rojo":([0.75,0.05,0.04,1],0.0,0.4), "gris_oscuro":([0.16,0.17,0.18,1],0.0,0.55)}
+        "verde":([0.05,0.55,0.12,1],0.0,0.4), "rojo":([0.75,0.05,0.04,1],0.0,0.4), "gris_oscuro":([0.16,0.17,0.18,1],0.0,0.55),
+        "cristal":([0.86,0.93,0.97,0.22],0.0,0.05)}   # metacrilato transparente
 
 def finish(groups, out):
     meshes = {k: trimesh.util.concatenate(v) for k, v in groups.items()}

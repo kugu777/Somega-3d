@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas.
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261115d`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261115e`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -44,7 +44,8 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 ### Pesadora ensacadora (en desarrollo)
 - STEP de origen: `SOMEGA_pesadora_montaje_completo_v68 (2).step` (15-11, sin acabar). Ficha `#pes`.
 - Medidas: 1801 × 905 × 1859 mm.
-- Colores (`build_pesadora.py`, por nombre de pieza): todo inox; cristales del visor de peso (`visor_peso_lcd_*`) verdes; caja Schneider XALD02 gris oscuro con pulsador_1 verde y pulsador_2 rojo; bandas de rodadura de las ruedas (`rueda_ALEX_*_goma_*`) azules; bandas de cangilones (`banda_azul_*`) azules; tacos de goma de las patas (`base_niveladora_goma_*`) negros. Los reductores NMRV040 y el resto, inox.
+- Girada -90° en vertical respecto al STEP para que quede como la encordadora: largo en Z y la tolva de carga hacia el mismo lado que la tolva de la encordadora.
+- Colores (`build_pesadora.py`, por nombre de pieza): todo inox; metacrilato de la ventana del armario del visor **transparente** (material `cristal`); botón del cierre de la tapa del armario (botón y cuerpo) **negro**; cristales del visor de peso (`visor_peso_lcd_*`) verdes; caja Schneider XALD02 gris oscuro con pulsador_1 verde y pulsador_2 rojo; bandas de rodadura de las ruedas (`rueda_ALEX_*_goma_*`) azules; bandas de cangilones (`banda_azul_*`) azules; tacos de goma de las patas (`base_niveladora_goma_*`) negros. Los reductores NMRV040 y el resto, inox.
 - Malla más gruesa para que pese menos: `step2glb.py ... 1.0 0.6` (15 MB).
 
 ## Cómo añadir extras a una máquina

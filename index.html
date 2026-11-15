@@ -154,9 +154,9 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261114c';
+import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115d';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261115e';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;

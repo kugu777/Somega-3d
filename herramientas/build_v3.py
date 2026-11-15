@@ -9,7 +9,7 @@ sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(_
 from build_v2 import MATS, nodes, E, E_DROP, M_DROP, mesa_cls
 
 rng = np.random.default_rng(7)
-VAR = {"inox":0.10, "negro":0.0, "azul_motor":0.05, "blanco":0.04, "azul":0.0, "gris_caja":0.04, "verde":0.0, "rojo":0.0, "gris_oscuro":0.03}
+VAR = {"cristal":0.0, "inox":0.10, "negro":0.0, "azul_motor":0.05, "blanco":0.04, "azul":0.0, "gris_caja":0.04, "verde":0.0, "rojo":0.0, "gris_oscuro":0.03}
 
 def build_group(meshes, var):
     m = trimesh.util.concatenate(meshes); m.merge_vertices(digits_vertex=5)
@@ -37,8 +37,8 @@ def write_glb(groups, out, shift=None):
         gl.accessors.append(acc); return len(gl.accessors)-1
     for name, (V, N, C, F, _) in groups.items():
         base, met, rough = MATS[name]
-        gl.materials.append(G.Material(name=name, pbrMetallicRoughness=G.PbrMetallicRoughness(
-            baseColorFactor=base, metallicFactor=met, roughnessFactor=rough)))
+        gl.materials.append(G.Material(name=name, alphaMode='BLEND' if base[3] < 1 else 'OPAQUE', doubleSided=base[3] < 1,
+            pbrMetallicRoughness=G.PbrMetallicRoughness(baseColorFactor=base, metallicFactor=met, roughnessFactor=rough)))
         p = add((V + shift).astype(np.float32), G.ARRAY_BUFFER, G.FLOAT, G.VEC3, True)
         n = add(N.astype(np.float32), G.ARRAY_BUFFER, G.FLOAT, G.VEC3)
         c = add(C.astype(np.float32), G.ARRAY_BUFFER, G.FLOAT, G.VEC3)
