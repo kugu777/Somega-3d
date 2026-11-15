@@ -1,0 +1,52 @@
+# Máquinas SOMEGA en realidad aumentada – estado y cómo seguir
+
+Actualizado: 15-11-2026
+
+## Enlace público
+https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
+
+- Repo GitHub: **kugu777/Somega-3d** (público). Cada vez que se sube algo a `main`, GitHub Actions publica la web sola (Pages → Source: GitHub Actions).
+- Fichas: `#mesa` y `#enc` (por ejemplo https://kugu777.github.io/Somega-3d/#enc). Los enlaces antiguos `/mesa/` y `/encordadora/` redirigen a la ficha.
+- Modo cámara: `camara.html` (`camara.html#mesa`, `camara.html#enc`).
+
+## Qué hace la web
+- **Menú** con las máquinas. Al tocar una se abre su ficha: 3D, medidas y el botón "Ver en mi barco".
+- **Varias máquinas a la vez**: realidad aumentada (WebXR de Chrome). Se elige la máquina arriba, se toca el suelo para ponerla, y se puede girar 15°, mover o quitar. Se ven varias juntas.
+- **Modo cámara** para móviles sin realidad aumentada: la cámara de fondo y la máquina encima. Usa el giroscopio, la inclinación o el acelerómetro si los hay; si no hay ninguno, se mira con el dedo. Arrastrando sobre la máquina se gira. La altura del móvil se ajusta a mano (1,40 m de serie). Las medidas son aproximadas.
+- **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas.
+- **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
+- Las URLs de los modelos llevan versión (`?v=20261114c`). **Hay que subirla en `index.html` y `camara.html` cada vez que se cambie un modelo**; si no, el móvil sigue usando el modelo viejo que tiene guardado.
+
+## Máquinas
+### Mesa vibradora 220 V
+- STEP de origen: `CONJUNTO_MESA_VIBRADORA_completa.step`, versión del 14-11 con los protectores de baldera de 173,5 mm.
+- Medidas: 1161 × 810 × 1025 mm (largo × ancho × alto).
+- Colores: todo inox; gomas y tacos en negro; caja Schneider XALD02 en **gris oscuro** con **pulsador_1 verde** y **pulsador_2 rojo**; pegatinas SOMEGA en azul; motovibradores y prensaestopa en gris oscuro.
+- Tornillería completa en inox. No se quita ninguna pieza.
+
+### Encordadora
+- STEP de origen: `SOMEGA_chasis_encordadora (8).step`. Las piezas no tienen nombre: se distinguen por el color del dibujo.
+- Medidas: 1983 × 749 × 1062 mm.
+- Colores: todo inox, incluidas la tornillería, la caja del rótulo SOMEGA, la pata diagonal, los tirantes, y la **protección, el tubo y el brazo de reacción de la reductora**.
+  - Negro: halador (con el cubo) y tacos de las patas.
+  - Azul: motores hidráulicos y **reductora**.
+  - Blanco: tuerca de nylon y brida del motor.
+- Correspondencia de colores del dibujo: ver `E` en `build_v2.py`. (3,13,50) y (70,85,93) son azul; (3,3,3), (1,1,1) y (139,147,156) son negro; los crema son blanco; el resto es inox.
+
+## Cómo añadir o cambiar una máquina
+1. `python3 step2glb.py máquina.step raw.glb` (pasa el STEP a malla con sus colores, en metros y con el eje Y hacia arriba).
+2. Asignar los colores a acabados reales: por nombre de pieza (como la mesa) o por color del dibujo (como la encordadora). Ver `build_v2.py`.
+3. `build_v3.py`: tono distinto por chapa, normales suavizadas a 25° y GLB final, sin nombres de piezas.
+4. `glb2usdz.py` para iPhone.
+5. Añadir la máquina a `MACHINES` en `index.html` y `camara.html`, subir la versión `?v=` y subir el cambio a `main`.
+Hace falta: `cadquery-ocp`, `trimesh`, `pygltflib` y `usd-core` (pip).
+
+## Móviles probados
+- Móvil de Vicente (Android, sin "Servicios de Google Play para RA" ni app Google): no admite realidad aumentada; usar el modo cámara.
+- Móvil de su hija: la realidad aumentada funciona.
+- Samsung Galaxy de su pareja: con Samsung Internet no funciona; probar en Chrome.
+
+## Pendiente
+- Que Vicente pruebe el modo cámara en su móvil y diga qué sensor sale abajo a la izquierda.
+- Confirmar el cambio del travesaño trasero 40×40 de la mesa nueva: misma medida exterior, distinto detalle.
+- Más máquinas cuando haya STEP (pesadora ensacadora, etc.).
