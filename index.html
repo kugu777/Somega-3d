@@ -156,7 +156,7 @@
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261118a';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261118b';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;
@@ -437,7 +437,7 @@ function renderCompat() {
   if (isIOS) {
     noar.innerHTML = 'En iPhone se abre con el visor de Apple:' +
       (single ? [current] : MACHINES).map(m => `<a rel="ar" href="${m.usdz(CFG[m.id])}"><img alt="" style="display:none">Ver en mi barco: ${single ? label(m, CFG[m.id]) : m.short}</a>`).join('') +
-      (single ? '' : '<a rel="ar" href="las-dos.usdz?v=20261118a"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
+      (single ? '' : '<a rel="ar" href="las-dos.usdz?v=20261118b"><img alt="" style="display:none">Ver en mi barco: las dos juntas</a>') + camLink;
   } else {
     noar.innerHTML = 'Este móvil no tiene realidad aumentada, pero puedes usar el <strong>modo cámara</strong>: ' +
       'las máquinas aparecen sobre la imagen de la cámara a tamaño real (medidas aproximadas).' + camLink +
