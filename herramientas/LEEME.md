@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261118c`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261119a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -50,7 +50,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Malla más gruesa para que pese menos: `step2glb.py ... 1.0 0.6` (15 MB).
 
 ### Pesadora ensacadora estrecha
-- STEP de origen: `SOMEGA_pesadora_ESTRECHA_montaje_completo (1).step` (18-11). Ficha `#pese`, archivos `pesadora/pesadora-estrecha.*`.
+- STEP de origen: `SOMEGA_pesadora_ESTRECHA_montaje_completo.step` (19-11, corregido: bandas, ejes, tambores, lona y pletinas a la medida de la estrecha). Ficha `#pese`, archivos `pesadora/pesadora-estrecha.*`.
 - Medidas: 1823 × 846 × 1859 mm.
 - Mismo aspecto que la ancha: mismo `build_pesadora.py` (girada igual, mismos colores). Su botonera es una caja Schneider XALD04 (gris oscuro, pulsador_1 verde, pulsador_2 rojo) con potenciómetro.
 
