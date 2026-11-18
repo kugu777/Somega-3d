@@ -1,5 +1,5 @@
 """Pesadora ensacadora (STEP SOMEGA_pesadora_montaje_completo_v68 (2)): colores de Vicente.
-Todo inox, salvo: metacrilato de la ventana del armario del visor transparente; botón del cierre de la tapa del armario negro; cristales del visor de peso (LCD) verdes; caja Schneider XALD02 gris oscuro con
+Todo inox, salvo: pegatinas de peligro eléctrico con sus colores (interior amarillo, marco y rayo negros); pegatina del logo SOMEGA azul; metacrilato de la ventana del armario del visor transparente; botón del cierre de la tapa del armario negro; cristales del visor de peso (LCD) verdes; caja Schneider XALD02 gris oscuro con
 pulsador_1 verde y pulsador_2 rojo; bandas de rodadura de las ruedas azules; bandas (cintas de
 cangilones) azules; tacos de goma de las patas negros.
 Uso: python3 build_pesadora.py raw.glb salida.glb"""
@@ -10,6 +10,9 @@ import build_v3 as B3
 def cls(name):
     if name.startswith('metacrilato'): return 'cristal'
     if name.startswith('cierre_pulsador_puerta_armario_visor_boton') or name.startswith('cierre_pulsador_puerta_armario_visor_cuerpo'): return 'negro'
+    if name.startswith('pegatina_peligro') and '_amarillo_' in name: return 'amarillo'   # colores originales
+    if name.startswith('pegatina_peligro'): return 'negro'                                # marco y rayo
+    if name.startswith('pegatina_logo_SOMEGA_azul'): return 'azul'
     if name.startswith('visor_peso_lcd'): return 'verde'
     if name.startswith('caja_pulsadores_XALD02_pulsador_1'): return 'verde'
     if name.startswith('caja_pulsadores_XALD02_pulsador_2'): return 'rojo'

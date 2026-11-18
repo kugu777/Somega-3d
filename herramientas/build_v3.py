@@ -9,7 +9,7 @@ sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(_
 from build_v2 import MATS, nodes, E, E_DROP, M_DROP, mesa_cls
 
 rng = np.random.default_rng(7)
-VAR = {"cristal":0.0, "inox":0.10, "negro":0.0, "azul_motor":0.05, "blanco":0.04, "azul":0.0, "gris_caja":0.04, "verde":0.0, "rojo":0.0, "gris_oscuro":0.03}
+VAR = {"cristal":0.0, "amarillo":0.0, "inox":0.10, "negro":0.0, "azul_motor":0.05, "blanco":0.04, "azul":0.0, "gris_caja":0.04, "verde":0.0, "rojo":0.0, "gris_oscuro":0.03}
 
 def build_group(meshes, var):
     m = trimesh.util.concatenate(meshes); m.merge_vertices(digits_vertex=5)

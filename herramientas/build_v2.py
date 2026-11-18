@@ -11,7 +11,8 @@ MATS = {"inox":([0.78,0.79,0.81,1],0.9,0.45), "negro":([0.03,0.03,0.03,1],0.0,0.
         "azul_motor":([0.05,0.20,0.58,1],0.3,0.45), "blanco":([0.93,0.93,0.91,1],0.0,0.6),
         "azul":([0.02,0.12,0.55,1],0.0,0.45), "gris_caja":([0.62,0.63,0.62,1],0.0,0.55),
         "verde":([0.05,0.55,0.12,1],0.0,0.4), "rojo":([0.75,0.05,0.04,1],0.0,0.4), "gris_oscuro":([0.16,0.17,0.18,1],0.0,0.55),
-        "cristal":([0.86,0.93,0.97,0.22],0.0,0.05)}   # metacrilato transparente
+        "cristal":([0.86,0.93,0.97,0.22],0.0,0.05),
+        "amarillo":([0.98,0.74,0.0,1],0.0,0.5)}   # metacrilato transparente / pegatinas de peligro
 
 def finish(groups, out):
     meshes = {k: trimesh.util.concatenate(v) for k, v in groups.items()}
@@ -46,6 +47,8 @@ def mesa_cls(name, col):
     if name.startswith('SCHNEIDER_caja_pulsadores_XALD02_pulsador_2'): return "rojo"
     if name.startswith('SCHNEIDER'): return "gris_oscuro"
     if name.startswith('PRENSAESTOPA') or name.startswith('MOTOR_'): return "gris_oscuro"
+    if name.startswith('PEGATINA_RIESGO_AMARILLO'): return "amarillo"   # pegatina de peligro: colores originales
+    if name.startswith('PEGATINA_RIESGO_NEGRO'): return "negro"
     if name.startswith('PEGATINA'): return "azul"
     if col == (2,2,2): return "negro"
     return "inox"

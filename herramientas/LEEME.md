@@ -1,6 +1,6 @@
 # Catálogo SOMEGA en 3D y realidad aumentada – estado y cómo seguir
 
-Actualizado: 16-11-2026 (catálogo con extras)
+Actualizado: 18-11-2026 (catálogo con extras)
 
 ## Enlace público
 https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
@@ -16,10 +16,10 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Botones "Pedir presupuesto" (de momento lleva a maquinariabatea.com) y "Compartir esta configuración".
 - **Varias máquinas a la vez**: realidad aumentada (WebXR de Chrome). Se elige la máquina arriba, se toca el suelo para ponerla, y se puede girar 15°, mover o quitar. Se ven varias juntas.
 - **Modo cámara** para móviles sin realidad aumentada: la cámara de fondo y la máquina encima. Usa el giroscopio, la inclinación o el acelerómetro si los hay; si no hay ninguno, se mira con el dedo. Arrastrando sobre la máquina se gira. La altura del móvil se ajusta a mano (1,40 m de serie). Las medidas son aproximadas.
-- **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas.
+- **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261116b`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261118a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -27,7 +27,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Se parte en piezas (`mesa/`): `mesa-cuerpo.glb` (mesa sin parrilla), `parrilla-22.glb` (de serie), `parrilla-16.glb`, `tolva.glb` (tolva de recogida), `rampa.glb` (rampa de salida). La parrilla 22 son las piezas `PARRILLA_*`, `PLETINA_40x6_A/B` y `TUBO_10x10x1_L800_*` del STEP 1.
 - iPhone: un USDZ por configuración en `mesa/usdz/` (`mesa-p22-t0-r0.usdz` … 8 en total).
 - Medidas: 1161 × 810 × 1025 mm de serie; con la rampa de salida, 1352 mm de largo.
-- Colores: todo inox; gomas y tacos en negro; caja Schneider XALD02 en **gris oscuro** con **pulsador_1 verde** y **pulsador_2 rojo**; pegatinas SOMEGA en azul; motovibradores y prensaestopa en gris oscuro.
+- Colores: todo inox; gomas y tacos en negro; caja Schneider XALD02 en **gris oscuro** con **pulsador_1 verde** y **pulsador_2 rojo**; pegatinas SOMEGA en azul; pegatinas de peligro con sus colores originales (`PEGATINA_RIESGO_AMARILLO` amarillo, `PEGATINA_RIESGO_NEGRO` negro: marco y rayo); motovibradores y prensaestopa en gris oscuro.
 - Tornillería completa en inox. No se quita ninguna pieza.
 
 ### Encordadora
@@ -42,11 +42,11 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Extra **Sinfín Ø80 paso 80 (tubo 1/2")** (`encordadora/sinfin.glb`, de `SOMEGA_sinfin_D80_P80_tubo1-2pulg_nucleo_chavetado.step` (15-11, el completo con el núcleo chavetado), todo inox). En el STEP está de pie; para verlo suelto se tumba (`lay: true`). Igual que el cartucho, de momento solo suelto en 360°.
 - Correspondencia de colores del dibujo: ver `E` en `build_v2.py`. (3,13,50) y (70,85,93) son azul; (3,3,3), (1,1,1) y (139,147,156) son negro; los crema son blanco; el resto es inox.
 
-### Pesadora ensacadora (en desarrollo)
-- STEP de origen: `SOMEGA_pesadora_montaje_completo_v70 (2).step` (16-11, sin acabar; añade el soporte de sacos con disco y las guías de cable). Ficha `#pes`.
+### Pesadora ensacadora
+- STEP de origen: `SOMEGA_pesadora_montaje_completo_v78 (1).step` (18-11, **definitivo**). Ficha `#pes`.
 - Medidas: 1823 × 905 × 1859 mm.
 - Girada -90° en vertical respecto al STEP para que quede como la encordadora: largo en Z y la tolva de carga hacia el mismo lado que la tolva de la encordadora.
-- Colores (`build_pesadora.py`, por nombre de pieza): todo inox; metacrilato de la ventana del armario del visor **transparente** (material `cristal`); botón del cierre de la tapa del armario (botón y cuerpo) **negro**; cristales del visor de peso (`visor_peso_lcd_*`) verdes; caja Schneider XALD02 gris oscuro con pulsador_1 verde y pulsador_2 rojo; bandas de rodadura de las ruedas (`rueda_ALEX_*_goma_*`) azules; bandas de cangilones (`banda_azul_*`) azules; tacos de goma de las patas (`base_niveladora_goma_*`) negros. Los reductores NMRV040 y el resto, inox.
+- Colores (`build_pesadora.py`, por nombre de pieza): todo inox; pegatinas de peligro eléctrico con sus colores originales (interior amarillo, marco y rayo negros); pegatina del logo SOMEGA azul; metacrilato de la ventana del armario del visor **transparente** (material `cristal`); botón del cierre de la tapa del armario (botón y cuerpo) **negro**; cristales del visor de peso (`visor_peso_lcd_*`) verdes; caja Schneider XALD02 gris oscuro con pulsador_1 verde y pulsador_2 rojo; bandas de rodadura de las ruedas (`rueda_ALEX_*_goma_*`) azules; bandas de cangilones (`banda_azul_*`) azules; tacos de goma de las patas (`base_niveladora_goma_*`) negros. Los reductores NMRV040 y el resto, inox.
 - Malla más gruesa para que pese menos: `step2glb.py ... 1.0 0.6` (15 MB).
 
 ## Cómo añadir extras a una máquina
@@ -74,5 +74,4 @@ Hace falta: `cadquery-ocp`, `trimesh`, `pygltflib` y `usd-core` (pip).
 - Confirmar el cambio del travesaño trasero 40×40 de la mesa nueva: misma medida exterior, distinto detalle.
 - Montar el cartucho para carga de red, el cono de entrada de red y el sinfín en la encordadora: hace falta el STEP del conjunto con ellos puestos, o su posición.
 - Botón "Pedir presupuesto": poner WhatsApp o correo de SOMEGA (ahora lleva a la web).
-- Pesadora: actualizarla cuando esté acabada (mismo `build_pesadora.py`).
 - Más máquinas cuando haya STEP.
