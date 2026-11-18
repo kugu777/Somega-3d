@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261118b`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261118c`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -48,6 +48,11 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Girada -90° en vertical respecto al STEP para que quede como la encordadora: largo en Z y la tolva de carga hacia el mismo lado que la tolva de la encordadora.
 - Colores (`build_pesadora.py`, por nombre de pieza): todo inox; pegatinas de peligro eléctrico con sus colores originales (interior amarillo, marco y rayo negros); pegatina del logo SOMEGA azul; metacrilato de la ventana del armario del visor **transparente** (material `cristal`); botón del cierre de la tapa del armario (botón y cuerpo) **negro**; cristales del visor de peso (`visor_peso_lcd_*`) verdes; caja Schneider XALD02 gris oscuro con pulsador_1 verde y pulsador_2 rojo; solo la cara exterior de la banda de rodadura de las ruedas (`rueda_ALEX_*_goma_*`) azul, el resto de la goma negro; rodamientos UCF204, sensor inductivo M18 y sus tuercas negros; bandas de cangilones (`banda_azul_*`) azules; tacos de goma de las patas (`base_niveladora_goma_*`) negros. Los reductores NMRV040 y el resto, inox.
 - Malla más gruesa para que pese menos: `step2glb.py ... 1.0 0.6` (15 MB).
+
+### Pesadora ensacadora estrecha
+- STEP de origen: `SOMEGA_pesadora_ESTRECHA_montaje_completo (1).step` (18-11). Ficha `#pese`, archivos `pesadora/pesadora-estrecha.*`.
+- Medidas: 1823 × 846 × 1859 mm.
+- Mismo aspecto que la ancha: mismo `build_pesadora.py` (girada igual, mismos colores). Su botonera es una caja Schneider XALD04 (gris oscuro, pulsador_1 verde, pulsador_2 rojo) con potenciómetro.
 
 ## Cómo añadir extras a una máquina
 1. STEP de la máquina y de cada extra **con el mismo origen** (exportados desde el mismo conjunto).

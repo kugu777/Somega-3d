@@ -14,9 +14,9 @@ def cls(name):
     if name.startswith('pegatina_peligro'): return 'negro'                                # marco y rayo
     if name.startswith('pegatina_logo_SOMEGA_azul'): return 'azul'
     if name.startswith('visor_peso_lcd'): return 'verde'
-    if name.startswith('caja_pulsadores_XALD02_pulsador_1'): return 'verde'
-    if name.startswith('caja_pulsadores_XALD02_pulsador_2'): return 'rojo'
-    if name.startswith('caja_pulsadores_XALD02'): return 'gris_oscuro'
+    if name.startswith('caja_pulsadores_XALD0') and '_pulsador_1' in name: return 'verde'
+    if name.startswith('caja_pulsadores_XALD0') and '_pulsador_2' in name: return 'rojo'
+    if name.startswith('caja_pulsadores_XALD0'): return 'gris_oscuro'
     if name.startswith('rueda_ALEX') and '_goma_' in name: return 'goma'   # se parte: banda de rodadura azul, resto negro
     if name.startswith('UCF204'): return 'negro'                            # rodamientos
     if name.startswith('sensor_inductivo') or name.startswith('tuerca_M18_sensor'): return 'negro'
