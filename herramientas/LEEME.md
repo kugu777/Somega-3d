@@ -1,6 +1,6 @@
 # Catálogo SOMEGA en 3D y realidad aumentada – estado y cómo seguir
 
-Actualizado: 18-11-2026 (catálogo con extras)
+Actualizado: 22-11-2026 (catálogo con extras)
 
 ## Enlace público
 https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261119a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261122a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -53,6 +53,11 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - STEP de origen: `SOMEGA_pesadora_ESTRECHA_montaje_completo.step` (19-11, corregido: bandas, ejes, tambores, lona y pletinas a la medida de la estrecha). Ficha `#pese`, archivos `pesadora/pesadora-estrecha.*`.
 - Medidas: 1823 × 846 × 1859 mm.
 - Mismo aspecto que la ancha: mismo `build_pesadora.py` (girada igual, mismos colores). Su botonera es una caja Schneider XALD04 (gris oscuro, pulsador_1 verde, pulsador_2 rojo) con potenciómetro.
+
+### Selectora hidráulica (adelanto)
+- STEP de origen: `SS26-100-Chasis-conjunto-R29.step` (22-11): chasis, parrillas, tolva, patas regulables y ruedas; sin la parte hidráulica todavía. Ficha `#sel`, archivos `selectora/`. Sale con la etiqueta "Adelanto".
+- Medidas: 2321 × 938 × 1448 mm.
+- Colores (`build_selectora.py`, por color del dibujo): todo inox; bases de goma de las patas y ruedas en negro (las que el dibujo trae en (2,2,2)). Ya viene con la tolva hacia el mismo lado que la de la encordadora: no se gira.
 
 ## Cómo añadir extras a una máquina
 1. STEP de la máquina y de cada extra **con el mismo origen** (exportados desde el mismo conjunto).
