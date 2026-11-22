@@ -19,7 +19,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261122a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261122b`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
@@ -40,6 +40,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - Extra **Cartucho para carga de red** (`encordadora/cartucho-red.glb`, de `SOMEGA_chapa_cartuchos_maquina.step`, 728 × 287 × 322 mm, todo inox). De momento solo se ve suelto en 360° (`view: true` en `lib/catalogo.js`): falta saber dónde va montado en la encordadora. Se hace con `build_extra.py`.
 - Extra **Cono de entrada de red** (`encordadora/cono-red.glb`, de `SOMEGA_cono_red_deformado.step`, 639 × 291 × 286 mm, todo inox). Solo suelto en 360°.
 - Extra **Sinfín Ø80 paso 80 (tubo 1/2")** (`encordadora/sinfin.glb`, de `SOMEGA_sinfin_D80_P80_tubo1-2pulg_nucleo_chavetado.step` (15-11, el completo con el núcleo chavetado), todo inox). En el STEP está de pie; para verlo suelto se tumba (`lay: true`). Igual que el cartucho, de momento solo suelto en 360°.
+- **Vuelta 180° el 22-11** (pedido de Vicente), hecha sobre el GLB final con `girar_glb.py` porque el STEP no está aquí. Si se rehace desde el STEP, darle la vuelta igual.
 - Correspondencia de colores del dibujo: ver `E` en `build_v2.py`. (3,13,50) y (70,85,93) son azul; (3,3,3), (1,1,1) y (139,147,156) son negro; los crema son blanco; el resto es inox.
 
 ### Pesadora ensacadora
@@ -57,7 +58,7 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 ### Selectora hidráulica (adelanto)
 - STEP de origen: `SS26-100-Chasis-conjunto-R29.step` (22-11): chasis, parrillas, tolva, patas regulables y ruedas; sin la parte hidráulica todavía. Ficha `#sel`, archivos `selectora/`. Sale con la etiqueta "Adelanto".
 - Medidas: 2321 × 938 × 1448 mm.
-- Colores (`build_selectora.py`, por color del dibujo): todo inox; bases de goma de las patas y ruedas en negro (las que el dibujo trae en (2,2,2)). Ya viene con la tolva hacia el mismo lado que la de la encordadora: no se gira.
+- Colores (`build_selectora.py`, por color del dibujo): todo inox; bases de goma de las patas y ruedas en negro (las que el dibujo trae en (2,2,2)). Vuelta 180° respecto al STEP (22-11), igual que la encordadora.
 
 ## Cómo añadir extras a una máquina
 1. STEP de la máquina y de cada extra **con el mismo origen** (exportados desde el mismo conjunto).
