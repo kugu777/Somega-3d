@@ -56,7 +56,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
-import { MACHINES, defaultCfg, parseHash, buildMachine } from './lib/catalogo.js?v=20261122b';
+import { MACHINES, defaultCfg, parseHash, buildMachine } from './lib/catalogo.js?v=20261123a';
 
 // La máquina que viene en el enlace sale con sus extras; las demás, de serie
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
@@ -103,13 +103,24 @@ const SHADOW = (() => { const c = document.createElement('canvas'); c.width = c.
   const g = c.getContext('2d'), r = g.createRadialGradient(64,64,10,64,64,64);
   r.addColorStop(0,'rgba(0,0,0,.5)'); r.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0,0,128,128);
   return new THREE.CanvasTexture(c); })();
-async function instance(m) {
-  const o = await buildMachine(m, CFG[m.id]);
+async function instance(m, cfg) {
+  const o = await buildMachine(m, cfg || CFG[m.id]);
   const b = new THREE.Box3().setFromObject(o), s = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
   const p = new THREE.Mesh(new THREE.PlaneGeometry(s.x*1.25, s.z*1.25), new THREE.MeshBasicMaterial({ map:SHADOW, transparent:true, depthWrite:false }));
   p.rotation.x = -Math.PI/2; p.position.set(c.x, 0.003, c.z); p.raycast = () => {}; o.add(p); return o;
 }
 MACHINES.forEach(m => buildMachine(m, CFG[m.id]));   // precarga
+// "Lo montado" en la portada (Monta tu cubierta): se pone de una vez, con su colocación
+let LAYOUT = [];
+try { LAYOUT = (JSON.parse(localStorage.getItem('somega-conjunto')) || []).filter(e => MACHINES.some(m => m.id === e.id)); } catch (e) {}
+const CONJ = { short:'Lo montado' };
+if (!fromHash && LAYOUT.length > 1) armed = CONJ;
+async function conjunto() {
+  const g = new THREE.Group();
+  for (const e of LAYOUT) { const o = await instance(MACHINES.find(m => m.id === e.id), e.cfg); o.position.set(e.x, 0, e.z); o.rotation.y = e.ry; g.add(o); }
+  const c = new THREE.Box3().setFromObject(g).getCenter(new THREE.Vector3());
+  g.children.forEach(o => { o.position.x -= c.x; o.position.z -= c.z; }); return g;
+}
 
 const placed = new THREE.Group(); scene.add(placed);
 const reticle = new THREE.Mesh(new THREE.RingGeometry(0.14, 0.19, 40).rotateX(-Math.PI/2),
@@ -161,7 +172,7 @@ const topBar = document.getElementById('top'), hint = document.getElementById('h
 let selected = null;
 function paintTop() {
   topBar.innerHTML = '';
-  MACHINES.forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
+  (!fromHash && LAYOUT.length > 1 ? [CONJ] : []).concat(MACHINES).forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
     if (m === armed) b.className = 'arm';
     b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.short; };
     topBar.appendChild(b); });
@@ -207,7 +218,7 @@ cv.addEventListener('click', async e => {
   const hits = ray.intersectObjects(placed.children, true);
   if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
   const p = floorAt(0, 0, new THREE.Vector3()); if (!p) { hint.textContent = 'Apunta más hacia la cubierta'; return; }
-  const o = await instance(armed); o.position.copy(p);
+  const o = armed === CONJ ? await conjunto() : await instance(armed); o.position.copy(p);
   o.rotation.y = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
   placed.add(o); select(o); hint.textContent = 'Arrastra el dedo sobre la máquina para girarla';
 });

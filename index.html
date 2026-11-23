@@ -37,6 +37,15 @@
   #spin.on { background:var(--blue); }
   #solo { left:12px; top:12px; display:none; background:rgba(31,79,209,.92); }
 
+  .addbar { display:flex; flex-wrap:wrap; gap:8px; padding:0 18px; }
+  .addbar button { border:1px solid var(--line); background:rgba(255,255,255,.07); color:var(--ink); border-radius:999px; padding:10px 14px; font:600 14px system-ui,sans-serif; cursor:pointer; }
+  .addbar button.clear { background:transparent; color:var(--muted); }
+  #compSel { position:absolute; left:10px; right:10px; top:10px; display:none; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; }
+  #compSel.on { display:flex; }
+  #compSel span { width:100%; text-align:center; font:600 13px system-ui,sans-serif; color:#fff; text-shadow:0 1px 3px #000; }
+  #compSel button { border:0; border-radius:999px; padding:10px 14px; font:600 14px system-ui,sans-serif; background:rgba(10,20,40,.85); color:#fff; cursor:pointer; }
+  #compSel #compDel { background:rgba(180,30,30,.85); }
+  #compEmpty { position:absolute; inset:0; display:none; align-items:center; justify-content:center; color:var(--muted); font-size:14px; pointer-events:none; }
   .go { display:flex; justify-content:center; padding:14px 18px 6px; }
   .btn { background:var(--blue); color:#fff; border:0; border-radius:999px; padding:15px 24px; font-size:16px; font-weight:600;
     box-shadow:0 6px 24px rgba(31,79,209,.45); cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block; }
@@ -97,8 +106,9 @@
   <h1>Catálogo SOMEGA</h1>
   <p class="sub">Maquinaria de acero inoxidable para bateas. Toca una máquina para verla en 360°, elegir sus extras y ponerla en tu barco a tamaño real.</p>
   <div class="cards" id="cards"></div>
-  <h2 class="sec">Todas juntas</h2>
-  <p class="sub">Pon una máquina en el barco, luego la otra, y mira cómo quedan juntas.</p>
+  <h2 class="sec">Monta tu cubierta</h2>
+  <p class="sub">Añade las máquinas que quieras (también repetidas). Toca una para seleccionarla, <b>arrástrala</b> para moverla y gírala con los botones. Las líneas del suelo son de 1 metro.</p>
+  <div class="addbar" id="addBar"></div>
 </div>
 
 <div id="singleHead" hidden>
@@ -112,6 +122,11 @@
   <div id="loading">Cargando modelo…</div>
   <button class="vbtn" id="solo"></button>
   <button class="vbtn on" id="spin">↻ 360°</button>
+  <div id="compSel">
+    <span id="compName"></span>
+    <button data-r="15">⟲ 15°</button><button data-r="-15">⟳ 15°</button><button data-r="90">↻ 90°</button><button id="compDel">Quitar</button>
+  </div>
+  <div id="compEmpty">Añade máquinas con los botones de arriba</div>
 </div>
 
 <div id="config" hidden>
@@ -134,7 +149,7 @@
   <strong>Cómo ponerla en tu barco</strong>
   <ol>
     <li>Pulsa el <strong>botón azul</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
-    <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Sale con los extras que hayas marcado.</li>
+    <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Sale con los extras que hayas marcado. Con <strong>＋ Lo montado</strong> pones de una vez todo lo que colocaste en "Monta tu cubierta".</li>
     <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
   </ol>
   <p style="margin:8px 0 0"><strong>EN:</strong> spin the model to see it in 360°, tick the extras, then tap the blue button and tap the deck to place it at real size.</p>
@@ -156,7 +171,7 @@
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261122b';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261123a';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;
@@ -242,21 +257,112 @@ async function showPreview(reframe = true) {
   let objs = [];
   if (solo) objs = [withShadow(await buildItem(solo))];
   else if (single) objs = [await instance(current)];
-  else for (const m of MACHINES) objs.push(await instance(m));
+  else for (const e of LAYOUT) objs.push(await entryObj(e));
   if (my !== token) return;           // llegó otra petición mientras cargaba
-  preview.clear();
-  if (objs.length > 1) {              // en fila, separadas 0,6 m
-    let x = 0;
-    for (const o of objs) { const w = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()).x; o.position.x = x + w/2; x += w + 0.6; }
-    objs.forEach(o => o.position.x -= (x - 0.6) / 2);
-  }
+  preview.clear(); compSelect(null);
   objs.forEach(o => preview.add(o));
+  grid.visible = !single;
+  $('compEmpty').style.display = !single && !LAYOUT.length ? 'flex' : 'none';
+  if (!single && !LAYOUT.length) reframe = false;
   if (reframe) frame();
   if (single && !solo) {              // medidas de la configuración elegida (sin la sombra)
     const s = sizeMM(await buildMachine(current, CFG[current.id]));
     $('sDims').innerHTML = `<span>Largo / Length <b>${s.L} mm</b></span><span>Ancho / Width <b>${s.W} mm</b></span><span>Alto / Height <b>${s.H} mm</b></span>`;
   }
   $('loading').style.display = 'none';
+}
+
+// ---------- monta tu cubierta (varias máquinas, cada una movida y girada a mano) ----------
+const KEY = 'somega-conjunto';
+let LAYOUT = [];   // [{ id, cfg, x, z, ry }]
+try { LAYOUT = (JSON.parse(localStorage.getItem(KEY)) || []).filter(e => MACHINES.some(m => m.id === e.id)); } catch (e) {}
+if (!LAYOUT.length) LAYOUT = [
+  { id:'mesa', cfg:defaultCfg(MACHINES[0]), x:-0.9, z:0, ry:0 },
+  { id:'enc', cfg:defaultCfg(MACHINES[1]), x:0.7, z:0, ry:0 } ];
+const saveLayout = () => { try { localStorage.setItem(KEY, JSON.stringify(LAYOUT)); } catch (e) {} };
+const grid = new THREE.GridHelper(12, 12, 0x5c6f96, 0x34456a);
+grid.material.transparent = true; grid.material.opacity = 0.45; grid.position.y = 0.001; grid.visible = false; scene.add(grid);
+const mOf = e => MACHINES.find(m => m.id === e.id);
+async function entryObj(e) {
+  const o = withShadow(await buildMachine(mOf(e), e.cfg));
+  o.position.set(e.x, 0, e.z); o.rotation.y = e.ry; o.userData.entry = e; return o;
+}
+function paintAdd() {
+  const bar = $('addBar'); bar.innerHTML = '';
+  MACHINES.forEach(m => {
+    const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
+    b.onclick = () => addEntry(m); bar.appendChild(b);
+  });
+  const c = document.createElement('button'); c.className = 'clear'; c.textContent = 'Vaciar';
+  c.onclick = () => { LAYOUT = []; saveLayout(); showPreview(); }; bar.appendChild(c);
+}
+async function addEntry(m) {
+  // a la derecha de lo que ya hay, con 0,6 m de paso
+  const box = new THREE.Box3().setFromObject(preview), e = { id:m.id, cfg:CFG[m.id].slice(), x:0, z:0, ry:0 };
+  const o = await entryObj(e), w = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()).x;
+  if (preview.children.length) { e.x = box.max.x + 0.6 + w / 2; e.z = (box.min.z + box.max.z) / 2; o.position.set(e.x, 0, e.z); }
+  LAYOUT.push(e); saveLayout(); preview.add(o); $('compEmpty').style.display = 'none';
+  setSpin(false); frame(); compSelect(o); renderCompat();
+}
+let compSel = null;
+const selLine = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color:0x3d7bff }));
+selLine.visible = false; scene.add(selLine);
+function compSelect(o) {
+  compSel = o; $('compSel').classList.toggle('on', !!o); selLine.visible = !!o;
+  if (!o) return;
+  $('compName').textContent = mOf(o.userData.entry).name;
+  o.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(o.matrixWorld).invert();
+  const lb = new THREE.Box3().setFromObject(o.children[0] || o).applyMatrix4(inv);
+  const y = 0.01, pts = [[lb.min.x,y,lb.min.z],[lb.max.x,y,lb.min.z],[lb.max.x,y,lb.max.z],[lb.min.x,y,lb.max.z]]
+    .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
+  selLine.geometry.setFromPoints(pts);
+}
+document.querySelectorAll('#compSel [data-r]').forEach(b => b.onclick = () => {
+  if (!compSel) return; const e = compSel.userData.entry;
+  e.ry += THREE.MathUtils.degToRad(+b.dataset.r); compSel.rotation.y = e.ry; saveLayout(); compSelect(compSel);
+});
+$('compDel').onclick = () => {
+  if (!compSel) return; LAYOUT.splice(LAYOUT.indexOf(compSel.userData.entry), 1); saveLayout();
+  preview.remove(compSel); compSelect(null); renderCompat();
+  $('compEmpty').style.display = LAYOUT.length ? 'none' : 'flex';
+};
+// tocar = seleccionar; arrastrar una máquina = moverla por el suelo (el resto del gesto gira la vista)
+const pick = new THREE.Raycaster(), ndc = new THREE.Vector2(), FLOOR = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let drag = null;
+function rayAt(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  pick.setFromCamera(ndc, camera); return pick;
+}
+renderer.domElement.addEventListener('pointerdown', ev => {
+  if (single || renderer.xr.isPresenting) return;
+  const hits = rayAt(ev).intersectObjects(preview.children, true);
+  if (!hits.length) { drag = { tap:true, x:ev.clientX, y:ev.clientY }; return; }
+  let o = hits[0].object; while (o.parent !== preview) o = o.parent;
+  compSelect(o); setSpin(false);
+  const p = pick.ray.intersectPlane(FLOOR, new THREE.Vector3());
+  drag = { o, off: p ? o.position.clone().sub(p) : new THREE.Vector3(), id: ev.pointerId };
+  controls.enabled = false; renderer.domElement.setPointerCapture(ev.pointerId);
+  ev.stopImmediatePropagation();
+}, { capture:true });
+renderer.domElement.addEventListener('pointermove', ev => {
+  if (!drag || !drag.o) return;
+  const p = rayAt(ev).ray.intersectPlane(FLOOR, new THREE.Vector3()); if (!p) return;
+  p.add(drag.off); drag.o.position.set(p.x, 0, p.z); compSelect(drag.o);
+});
+addEventListener('pointerup', ev => {
+  if (!drag) return;
+  if (drag.o) { const e = drag.o.userData.entry; e.x = drag.o.position.x; e.z = drag.o.position.z; saveLayout(); controls.enabled = true; }
+  else if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 6) compSelect(null);   // toque en vacío
+  drag = null;
+});
+paintAdd();
+// el conjunto montado, como un solo objeto, para ponerlo en el barco de una vez
+async function conjuntoObj() {
+  const g = new THREE.Group(); for (const e of LAYOUT) g.add(await entryObj(e));
+  const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3());
+  g.children.forEach(o => { o.position.x -= c.x; o.position.z -= c.z; }); return g;
 }
 
 // ---------- catálogo ----------
@@ -329,7 +435,7 @@ function route() {
     items(current).forEach(i => loadGLB(i.glb));      // precarga de los extras
   } else { $('config').hidden = true; document.title = 'Catálogo SOMEGA · Maquinaria inox para bateas'; }
   $('start').textContent = single ? 'Ver en mi barco' : 'Colocar varias en mi barco';
-  setSpin(true); scrollTo(0, 0); showPreview(); if (arOK !== null) renderCompat();
+  setSpin(single); compSelect(null); scrollTo(0, 0); showPreview(); if (arOK !== null) renderCompat();
 }
 addEventListener('hashchange', route);
 route();
@@ -344,10 +450,12 @@ const reticle = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.16, 40).rotateX(-M
 const outline = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color:0x3d7bff }));
 outline.visible = false; scene.add(outline);
 
+const CONJ = { short:'lo montado' };   // el conjunto de "Monta tu cubierta"
 function paintTop() {
   top.innerHTML = '';
-  MACHINES.forEach(m => {
-    const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
+  const opts = (LAYOUT.length > 1 ? [CONJ] : []).concat(MACHINES);
+  opts.forEach(m => {
+    const b = document.createElement('button'); b.textContent = '＋ ' + (m === CONJ ? 'Lo montado' : m.short);
     if (m === armed) b.className = 'arm';
     b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; };
     top.appendChild(b);
@@ -377,7 +485,7 @@ controller.addEventListener('select', async () => {
   const hits = ray.intersectObjects(placed.children, true);
   if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
   if (!reticle.visible) return;
-  const o = await instance(armed);
+  const o = armed === CONJ ? await conjuntoObj() : await instance(armed);
   o.position.setFromMatrixPosition(reticle.matrix);
   o.rotation.y = yawToViewer(o.position);
   placed.add(o); select(o);
@@ -393,7 +501,7 @@ async function startAR() {
     session = await navigator.xr.requestSession('immersive-ar', {
       requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','local-floor'], domOverlay:{ root: ui } });
   } catch (e) { diag('No se pudo iniciar AR: ' + e.message); return; }
-  armed = current; paintTop(); ui.classList.add('on'); hint.textContent = 'Apunta al suelo del barco…';
+  armed = single ? current : (LAYOUT.length > 1 ? CONJ : MACHINES[0]); paintTop(); ui.classList.add('on'); hint.textContent = 'Apunta al suelo del barco…';
   preview.visible = false; floorS.visible = false; scene.background = null;
   renderer.xr.setReferenceSpaceType('local');
   await renderer.xr.setSession(session);
