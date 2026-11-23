@@ -530,6 +530,8 @@ async function startAR() {
   preview.visible = false; floorS.visible = false; scene.background = null;
   renderer.xr.setReferenceSpaceType('local');
   await renderer.xr.setSession(session);
+  // si el móvil no deja poner botones encima de la cámara (dom-overlay), no hay barra: queda anotado abajo en la página
+  diag('Botones en la realidad aumentada (dom-overlay): ' + (session.domOverlayState ? session.domOverlayState.type : 'NO'));
   const viewerSpace = await session.requestReferenceSpace('viewer');
   hitSource = await session.requestHitTestSource({ space: viewerSpace });
   session.addEventListener('end', () => {
