@@ -150,7 +150,8 @@
   <ol>
     <li>Pulsa el <strong>botón azul</strong> y apunta a la cubierta moviendo el móvil despacio hasta ver el círculo.</li>
     <li>Arriba elige la máquina y <strong>toca la pantalla</strong> para ponerla. Sale con los extras que hayas marcado. Con <strong>＋ Lo montado</strong> pones de una vez todo lo que colocaste en "Monta tu cubierta".</li>
-    <li>Toca una máquina para seleccionarla: puedes <strong>girarla</strong>, <strong>moverla</strong> donde está el círculo o <strong>quitarla</strong>.</li>
+    <li>Toca una máquina para seleccionarla: <strong>arrástrala con el dedo</strong> para moverla, gírala con los botones de abajo o quítala. <strong>Listo</strong> la suelta.</li>
+    <li>Elige arriba otra máquina y toca el suelo para ponerla también. Así montas varias.</li>
   </ol>
   <p style="margin:8px 0 0"><strong>EN:</strong> spin the model to see it in 360°, tick the extras, then tap the blue button and tap the deck to place it at real size.</p>
 </div>
@@ -162,8 +163,8 @@
   <div class="bar top" id="ar-top"></div>
   <div id="ar-hint">Apunta al suelo del barco…</div>
   <div class="bar bottom" id="ar-sel">
-    <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button>
-    <button id="move">Mover aquí</button><button id="del">Quitar</button>
+    <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button><button id="rot90">↻ 90°</button>
+    <button id="move">Mover al círculo</button><button id="del">Quitar</button><button id="desel">Listo</button>
   </div>
 </div>
 
@@ -171,7 +172,7 @@
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261123a';
+import { MACHINES, V, items, defaultCfg, parseHash, hashOf, toggle, label, buildMachine, buildItem, sizeMM, itemSize, loadGLB } from './lib/catalogo.js?v=20261123b';
 
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
 let current = MACHINES[0], single = false, solo = null;
@@ -337,9 +338,8 @@ function rayAt(ev) {
 }
 renderer.domElement.addEventListener('pointerdown', ev => {
   if (single || renderer.xr.isPresenting) return;
-  const hits = rayAt(ev).intersectObjects(preview.children, true);
-  if (!hits.length) { drag = { tap:true, x:ev.clientX, y:ev.clientY }; return; }
-  let o = hits[0].object; while (o.parent !== preview) o = o.parent;
+  const o = hitMachine(rayAt(ev), preview);
+  if (!o) { drag = { tap:true, x:ev.clientX, y:ev.clientY }; return; }
   compSelect(o); setSpin(false);
   const p = pick.ray.intersectPlane(FLOOR, new THREE.Vector3());
   drag = { o, off: p ? o.position.clone().sub(p) : new THREE.Vector3(), id: ev.pointerId };
@@ -457,7 +457,7 @@ function paintTop() {
   opts.forEach(m => {
     const b = document.createElement('button'); b.textContent = '＋ ' + (m === CONJ ? 'Lo montado' : m.short);
     if (m === armed) b.className = 'arm';
-    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; };
+    b.onclick = () => { armed = m; select(null); paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; };
     top.appendChild(b);
   });
   const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
@@ -478,20 +478,45 @@ function yawToViewer(pos) {
   return Math.atan2(cp.x - pos.x, cp.z - pos.z);
 }
 const ray = new THREE.Raycaster(), controller = renderer.xr.getController(0); scene.add(controller);
-controller.addEventListener('select', async () => {
+function ctrlRay() {
   const m4 = new THREE.Matrix4().extractRotation(controller.matrixWorld);
   ray.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-  ray.ray.direction.set(0, 0, -1).applyMatrix4(m4);
-  const hits = ray.intersectObjects(placed.children, true);
-  if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
-  if (!reticle.visible) return;
+  ray.ray.direction.set(0, 0, -1).applyMatrix4(m4); return ray;
+}
+// solo las chapas cuentan al tocar (las aristas dibujadas no: si no, cualquier toque cerca "tocaba" una máquina)
+const hitMachine = (r, group) => { const h = r.intersectObjects(group.children, true).find(h => h.object.isMesh);
+  if (!h) return null; let o = h.object; while (o.parent !== group) o = o.parent; return o; };
+let arDrag = null, busy = false;
+controller.addEventListener('selectstart', () => {
+  const o = hitMachine(ctrlRay(), placed);
+  if (o) {   // dedo sobre una máquina: seleccionarla y, si se arrastra, moverla
+    select(o);
+    const p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -o.position.y), new THREE.Vector3());
+    arDrag = { o, off: p ? o.position.clone().sub(p) : new THREE.Vector3(), start: p, moved: false };
+  } else arDrag = { none: true };
+});
+controller.addEventListener('selectend', async () => {
+  const d = arDrag; arDrag = null;
+  if (!d || !d.none || busy) return;
+  if (!reticle.visible) { hint.textContent = 'Apunta al suelo hasta ver el círculo'; return; }
+  busy = true; hint.textContent = 'Cargando ' + armed.short + '…';
   const o = armed === CONJ ? await conjuntoObj() : await instance(armed);
+  busy = false;
   o.position.setFromMatrixPosition(reticle.matrix);
   o.rotation.y = yawToViewer(o.position);
   placed.add(o); select(o);
-  hint.textContent = 'Toca una máquina para girarla o moverla';
+  hint.textContent = 'Arrastra la máquina para moverla · arriba eliges otra';
 });
+function arDragUpdate() {
+  if (!arDrag || !arDrag.o) return;
+  const o = arDrag.o, p = ctrlRay().ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -o.position.y), new THREE.Vector3());
+  if (!p) return;
+  if (!arDrag.moved && arDrag.start && p.distanceTo(arDrag.start) < 0.03) return;
+  arDrag.moved = true; o.position.set(p.x + arDrag.off.x, o.position.y, p.z + arDrag.off.z); select(o);
+}
 $('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
+$('rot90').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/2; select(selected); } };
+$('desel').onclick = () => select(null);
 $('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
 $('move').onclick = () => { if (selected && reticle.visible) { selected.position.setFromMatrixPosition(reticle.matrix); select(selected); } };
 $('del').onclick = () => { if (selected) { placed.remove(selected); select(null); } };
@@ -520,6 +545,7 @@ renderer.setAnimationLoop((t, frame) => {
       reticle.visible = true; reticle.matrix.fromArray(r[0].getPose(ref).transform.matrix);
       if (hint.textContent.startsWith('Apunta')) hint.textContent = 'Toca el suelo para poner: ' + armed.short;
     } else reticle.visible = false;
+    arDragUpdate();
   } else controls.update();
   renderer.render(scene, camera);
 });

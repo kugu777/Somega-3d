@@ -49,14 +49,14 @@
 <div class="height">Altura<br>móvil<b id="hv">1,40 m</b><button id="hup">＋</button><button id="hdn">－</button></div>
 <div id="sens"></div>
 <div class="bar bottom" id="sel">
-  <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button>
-  <button id="move">Mover aquí</button><button id="del">Quitar</button>
+  <button id="rotL">⟲ 15°</button><button id="rotR">⟳ 15°</button><button id="rot90">↻ 90°</button>
+  <button id="move">Mover al centro</button><button id="del">Quitar</button><button id="desel">Listo</button>
 </div>
 
 <script type="module">
 import * as THREE from 'three';
 import { addShadowLight, shadowFloor } from './lib/somega.js?v=20261115e';
-import { MACHINES, defaultCfg, parseHash, buildMachine } from './lib/catalogo.js?v=20261123a';
+import { MACHINES, defaultCfg, parseHash, buildMachine } from './lib/catalogo.js?v=20261123b';
 
 // La máquina que viene en el enlace sale con sus extras; las demás, de serie
 const CFG = Object.fromEntries(MACHINES.map(m => [m.id, defaultCfg(m)]));
@@ -174,7 +174,7 @@ function paintTop() {
   topBar.innerHTML = '';
   (!fromHash && LAYOUT.length > 1 ? [CONJ] : []).concat(MACHINES).forEach(m => { const b = document.createElement('button'); b.textContent = '＋ ' + m.short;
     if (m === armed) b.className = 'arm';
-    b.onclick = () => { armed = m; paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.short; };
+    b.onclick = () => { armed = m; select(null); paintTop(); hint.textContent = 'Toca la cubierta para poner: ' + m.short; };
     topBar.appendChild(b); });
   const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
   x.onclick = () => location.href = './' + location.hash; topBar.appendChild(x);
@@ -187,16 +187,22 @@ function select(o) {
     .map(p => new THREE.Vector3(...p).applyMatrix4(o.matrixWorld));
   outline.geometry.setFromPoints(pts);
 }
-// arrastrar: sobre la máquina seleccionada la gira; en otro sitio mira alrededor
+// solo las chapas cuentan al tocar (las aristas dibujadas no)
+const hitMachine = (r, group) => { const h = r.intersectObjects(group.children, true).find(h => h.object.isMesh);
+  if (!h) return null; let o = h.object; while (o.parent !== group) o = o.parent; return o; };
+// arrastrar: sobre una máquina la mueve por la cubierta; en otro sitio mira alrededor
 let drag = null;
 const cv = renderer.domElement;
 cv.addEventListener('pointerdown', e => {
-  let mode = 'look';
-  if (selected) {
-    ray.setFromCamera({ x:e.clientX/innerWidth*2-1, y:-(e.clientY/innerHeight)*2+1 }, camera);
-    if (ray.intersectObject(selected, true).length) mode = 'spin';
+  let mode = 'look', o = null, off = null;
+  ray.setFromCamera({ x:e.clientX/innerWidth*2-1, y:-(e.clientY/innerHeight)*2+1 }, camera);
+  o = hitMachine(ray, placed);
+  if (o) {
+    mode = 'move'; select(o);
+    const p = floorAt(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1, new THREE.Vector3());
+    off = p ? o.position.clone().sub(p) : new THREE.Vector3();
   }
-  drag = { x:e.clientX, y:e.clientY, lx:e.clientX, ly:e.clientY, mode, moved:false };
+  drag = { x:e.clientX, y:e.clientY, lx:e.clientX, ly:e.clientY, mode, o, off, moved:false };
   cv.setPointerCapture(e.pointerId);
 });
 cv.addEventListener('pointermove', e => {
@@ -204,7 +210,10 @@ cv.addEventListener('pointermove', e => {
   const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly; drag.lx = e.clientX; drag.ly = e.clientY;
   if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) drag.moved = true;
   if (!drag.moved) return;
-  if (drag.mode === 'spin') { selected.rotation.y += dx * 0.012; select(selected); }
+  if (drag.mode === 'move') {
+    const p = floorAt(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1, new THREE.Vector3());
+    if (p) { drag.o.position.set(p.x + drag.off.x, 0, p.z + drag.off.z); select(drag.o); }
+  }
   else {
     manualYaw += dx * 0.004;
     if (sens === 'ninguno') manualPitch = Math.max(-1.45, Math.min(0.3, manualPitch + dy * 0.004));
@@ -215,13 +224,15 @@ cv.addEventListener('click', async e => {
   if (drag && drag.moved) return;
   const nx = e.clientX / innerWidth * 2 - 1, ny = -(e.clientY / innerHeight) * 2 + 1;
   ray.setFromCamera({ x:nx, y:ny }, camera);
-  const hits = ray.intersectObjects(placed.children, true);
-  if (hits.length) { let o = hits[0].object; while (o.parent !== placed) o = o.parent; select(o); return; }
+  const hit = hitMachine(ray, placed);
+  if (hit) { select(hit); return; }
   const p = floorAt(0, 0, new THREE.Vector3()); if (!p) { hint.textContent = 'Apunta más hacia la cubierta'; return; }
   const o = armed === CONJ ? await conjunto() : await instance(armed); o.position.copy(p);
   o.rotation.y = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
-  placed.add(o); select(o); hint.textContent = 'Arrastra el dedo sobre la máquina para girarla';
+  placed.add(o); select(o); hint.textContent = 'Arrastra la máquina para moverla · arriba eliges otra';
 });
+document.getElementById('rot90').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/2; select(selected); } };
+document.getElementById('desel').onclick = () => select(null);
 document.getElementById('rotL').onclick = () => { if (selected) { selected.rotation.y += Math.PI/12; select(selected); } };
 document.getElementById('rotR').onclick = () => { if (selected) { selected.rotation.y -= Math.PI/12; select(selected); } };
 document.getElementById('move').onclick = () => { const p = selected && floorAt(0, 0, new THREE.Vector3()); if (p) { selected.position.copy(p); select(selected); } };

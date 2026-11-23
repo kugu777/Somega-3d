@@ -15,12 +15,12 @@ https://kugu777.github.io/Somega-3d/  (la S mayúscula es obligatoria)
 - **Configurador** en la ficha: grupos de opciones ("elige una", como la parrilla) y extras que se marcan o desmarcan. Se montan en su sitio en el 3D, en la realidad aumentada y en el modo cámara. "Ver 360°" enseña cada pieza sola.
 - Botones "Pedir presupuesto" (de momento lleva a maquinariabatea.com) y "Compartir esta configuración".
 - **Monta tu cubierta** (portada): se añaden las máquinas que se quieran (también repetidas) con los botones ＋; tocar una la selecciona, arrastrarla la mueve por el suelo (cuadrícula de 1 m) y se gira con ⟲15° ⟳15° ↻90°; "Quitar" y "Vaciar". Se guarda en el móvil (`localStorage` `somega-conjunto`). En realidad aumentada y en modo cámara sale el botón **＋ Lo montado** para poner todo el conjunto de una vez, con su colocación.
-- **Varias máquinas a la vez**: realidad aumentada (WebXR de Chrome). Se elige la máquina arriba, se toca el suelo para ponerla, y se puede girar 15°, mover o quitar. Se ven varias juntas.
+- **Varias máquinas a la vez** en realidad aumentada (WebXR de Chrome) y en modo cámara: se elige la máquina arriba y se toca el suelo para ponerla; luego se elige otra y se pone también. Tocar una la selecciona; **arrastrarla con el dedo la mueve**; abajo ⟲15° ⟳15° ↻90°, "Mover al círculo/centro", "Quitar" y "Listo" (la suelta). Al tocar, solo cuentan las chapas, no las aristas dibujadas (antes, con las aristas, cualquier toque cerca de una máquina la seleccionaba en vez de poner otra: arreglado el 23-11).
 - **Modo cámara** para móviles sin realidad aumentada: la cámara de fondo y la máquina encima. Usa el giroscopio, la inclinación o el acelerómetro si los hay; si no hay ninguno, se mira con el dedo. Arrastrando sobre la máquina se gira. La altura del móvil se ajusta a mano (1,40 m de serie). Las medidas son aproximadas.
 - **iPhone**: visor de Apple (USDZ) para cada máquina y para las dos juntas (`las-dos.usdz`: mesa de serie + encordadora, rehecho el 18-11).
 - **Acabado**: inox metalizado mate, aristas dibujadas (más de 28°), sombras reales y un tono algo distinto en cada chapa.
 - Las máquinas, sus opciones y los archivos están en **`lib/catalogo.js`** (lo usan `index.html` y `camara.html`).
-- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261123a`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
+- Las URLs de los modelos llevan versión (`V` en `lib/catalogo.js`, ahora `20261123b`). **Hay que subirla cada vez que se cambie un modelo** (y el `?v=` con que se importa `catalogo.js` en `index.html` y `camara.html`); si no, el móvil sigue usando el modelo viejo que tiene guardado.
 
 ## Máquinas
 ### Mesa vibradora 220 V
