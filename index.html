@@ -441,8 +441,63 @@ addEventListener('hashchange', route);
 route();
 
 // ---------- realidad aumentada ----------
-const ui = $('ar-ui'), top = $('ar-top'), hint = $('ar-hint'), selBar = $('ar-sel');
-ui.addEventListener('beforexrselect', e => { if (e.target.closest('button')) e.preventDefault(); });
+const ui = $('ar-ui');
+// ---------- botones dibujados dentro de la escena, pegados a la cámara ----------
+// Así salen en cualquier móvil (los botones de página encima de la cámara, "dom-overlay", no salen en todos)
+scene.add(camera);
+const hud = new THREE.Group(); hud.visible = false; camera.add(hud);
+const HUD_D = 0.3, BW = 320, BH = 104;
+function drawBtn(c, text, bg) {
+  const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height);
+  const r = c.height / 2; g.fillStyle = bg; g.beginPath(); g.roundRect(4, 4, c.width - 8, c.height - 8, r - 4); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  let fs = 40; g.font = `600 ${fs}px system-ui, sans-serif`;
+  while (g.measureText(text).width > c.width - 36 && fs > 18) { fs -= 2; g.font = `600 ${fs}px system-ui, sans-serif`; }
+  g.fillText(text, c.width / 2, c.height / 2 + 2);
+}
+function hudBtn(text, bg, onTap, w = BW) {
+  const c = document.createElement('canvas'); c.width = w; c.height = BH; drawBtn(c, text, bg);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map:t, transparent:true, depthTest:false, depthWrite:false, toneMapped:false }));
+  m.renderOrder = 1000; m.userData = { onTap, c, t, aspect: w / BH }; hud.add(m); return m;
+}
+function setBtn(m, text, bg) { drawBtn(m.userData.c, text, bg); m.userData.t.needsUpdate = true; }
+const DARK = 'rgba(10,20,40,0.82)', BLUE = '#1f4fd1', RED = 'rgba(180,30,30,0.9)';
+let hudTop = [];
+const hudSel = [
+  hudBtn('⟲ 15°', DARK, () => rotSel(Math.PI / 12)), hudBtn('⟳ 15°', DARK, () => rotSel(-Math.PI / 12)), hudBtn('↻ 90°', DARK, () => rotSel(-Math.PI / 2)),
+  hudBtn('Mover al círculo', DARK, () => $('move').onclick()), hudBtn('Quitar', RED, () => $('del').onclick()), hudBtn('Listo', BLUE, () => select(null)) ];
+const hudHint = hudBtn('', 'rgba(0,0,0,0.55)', null, 900);
+hudHint.userData.onTap = null;
+let hintText = '';
+const hint = { get textContent() { return hintText; }, set textContent(v) { hintText = v; setBtn(hudHint, v, 'rgba(0,0,0,0.55)'); } };
+const selBar = { classList: { toggle: (c, on) => hudSel.forEach(b => b.visible = on) } };
+hudSel.forEach(b => b.visible = false);
+function rotSel(a) { if (selected) { selected.rotation.y += a; select(selected); } }
+// colocar los botones en filas, en coordenadas de pantalla (-1..1), cada fotograma
+function hudLayout() {
+  const P = camera.projectionMatrix.elements, hw = HUD_D / P[0], hh = HUD_D / P[5];
+  const place = (m, cx, cy, nw) => { const w = nw * hw, h = w / m.userData.aspect; m.scale.set(w, h, 1); m.position.set(cx * hw, cy * hh, -HUD_D); return h / hh; };
+  const rows = (list, yStart, dir) => {
+    let y = yStart; const chunks = [];
+    for (let i = 0; i < list.length; i += 3) chunks.push(list.slice(i, i + 3));
+    if (dir > 0) chunks.reverse();          // abajo: se apilan de abajo arriba, sin desordenar cada fila
+    for (const row of chunks) {
+      const nw = 0.6, gap = 0.04, tot = row.length * nw + (row.length - 1) * gap;
+      let x = -tot / 2 + nw / 2, hN = 0;
+      row.forEach(m => { hN = place(m, x, 0, nw); x += nw + gap; });
+      y += dir * hN / 2; row.forEach(m => m.position.y = y * hh); y += dir * (hN / 2 + 0.025);
+    }
+    return y;
+  };
+  rows(hudTop, 0.93, -1);
+  const yb = rows(hudSel.filter(b => b.visible), -0.93, 1);
+  const hN = place(hudHint, 0, 0, 1.9); hudHint.position.y = (Math.max(yb, -0.93) + hN / 2 + 0.02) * hh;
+  hudHint.visible = !!hintText;
+}
+// prueba en el ordenador: index.html?hudtest enseña los botones de la realidad aumentada sobre la vista 3D
+if (location.search.includes('hudtest')) setTimeout(() => { hud.visible = true; paintTop(); hint.textContent = 'Arrastra la máquina para moverla · arriba eliges otra'; selBar.classList.toggle('on', true); }, 500);
+function hudHit(r) { const h = r.intersectObjects(hud.children.filter(m => m.visible && m.userData.onTap), false)[0]; return h && h.object; }
 let armed = MACHINES[0], hitSource = null, session = null, selected = null;
 const placed = new THREE.Group(); scene.add(placed);
 const reticle = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.16, 40).rotateX(-Math.PI/2),
@@ -452,16 +507,11 @@ outline.visible = false; scene.add(outline);
 
 const CONJ = { short:'lo montado' };   // el conjunto de "Monta tu cubierta"
 function paintTop() {
-  top.innerHTML = '';
+  hudTop.forEach(b => { hud.remove(b); b.material.map.dispose(); b.material.dispose(); });
   const opts = (LAYOUT.length > 1 ? [CONJ] : []).concat(MACHINES);
-  opts.forEach(m => {
-    const b = document.createElement('button'); b.textContent = '＋ ' + (m === CONJ ? 'Lo montado' : m.short);
-    if (m === armed) b.className = 'arm';
-    b.onclick = () => { armed = m; select(null); paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; };
-    top.appendChild(b);
-  });
-  const x = document.createElement('button'); x.className = 'exit'; x.textContent = 'Salir';
-  x.onclick = () => session && session.end(); top.appendChild(x);
+  hudTop = opts.map(m => hudBtn('＋ ' + (m === CONJ ? 'Lo montado' : m.short), m === armed ? BLUE : DARK,
+    () => { armed = m; select(null); paintTop(); hint.textContent = 'Toca el suelo para poner: ' + m.short; }));
+  hudTop.push(hudBtn('Salir', RED, () => session && session.end()));
 }
 function select(o) {
   selected = o; selBar.classList.toggle('on', !!o); outline.visible = !!o;
@@ -488,7 +538,9 @@ const hitMachine = (r, group) => { const h = r.intersectObjects(group.children, 
   if (!h) return null; let o = h.object; while (o.parent !== group) o = o.parent; return o; };
 let arDrag = null, busy = false;
 controller.addEventListener('selectstart', () => {
-  const o = hitMachine(ctrlRay(), placed);
+  const b = hudHit(ctrlRay());
+  if (b) { arDrag = { hud:true }; b.userData.onTap(); return; }
+  const o = hitMachine(ray, placed);
   if (o) {   // dedo sobre una máquina: seleccionarla y, si se arrastra, moverla
     select(o);
     const p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -o.position.y), new THREE.Vector3());
@@ -524,18 +576,16 @@ $('del').onclick = () => { if (selected) { placed.remove(selected); select(null)
 async function startAR() {
   try {
     session = await navigator.xr.requestSession('immersive-ar', {
-      requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','local-floor'], domOverlay:{ root: ui } });
+      requiredFeatures:['hit-test'], optionalFeatures:['local-floor'] });
   } catch (e) { diag('No se pudo iniciar AR: ' + e.message); return; }
-  armed = single ? current : (LAYOUT.length > 1 ? CONJ : MACHINES[0]); paintTop(); ui.classList.add('on'); hint.textContent = 'Apunta al suelo del barco…';
+  armed = single ? current : (LAYOUT.length > 1 ? CONJ : MACHINES[0]); paintTop(); hud.visible = true; hint.textContent = 'Apunta al suelo del barco…';
   preview.visible = false; floorS.visible = false; scene.background = null;
   renderer.xr.setReferenceSpaceType('local');
   await renderer.xr.setSession(session);
-  // si el móvil no deja poner botones encima de la cámara (dom-overlay), no hay barra: queda anotado abajo en la página
-  diag('Botones en la realidad aumentada (dom-overlay): ' + (session.domOverlayState ? session.domOverlayState.type : 'NO'));
   const viewerSpace = await session.requestReferenceSpace('viewer');
   hitSource = await session.requestHitTestSource({ space: viewerSpace });
   session.addEventListener('end', () => {
-    hitSource = null; session = null; ui.classList.remove('on'); reticle.visible = false;
+    hitSource = null; session = null; hud.visible = false; reticle.visible = false;
     placed.clear(); select(null); preview.visible = true; floorS.visible = true; resize();
   });
 }
@@ -547,8 +597,8 @@ renderer.setAnimationLoop((t, frame) => {
       reticle.visible = true; reticle.matrix.fromArray(r[0].getPose(ref).transform.matrix);
       if (hint.textContent.startsWith('Apunta')) hint.textContent = 'Toca el suelo para poner: ' + armed.short;
     } else reticle.visible = false;
-    arDragUpdate();
-  } else controls.update();
+    arDragUpdate(); hudLayout();
+  } else { controls.update(); if (hud.visible) hudLayout(); }
   renderer.render(scene, camera);
 });
 
